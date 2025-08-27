@@ -53,40 +53,50 @@ jobs:
         configuration: [Release]
 
     steps:
-      # 1. 拉取代码
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 2. 安装 .NET SDK
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
 
-      # 3. 安装 MSBuild
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
-      # 4. 还原依赖
       - name: Restore
         run: msbuild net8.0_ProxyWPF.sln /t:Restore /p:Configuration=${{ matrix.configuration }}
 
-      # 5. 构建项目
       - name: Build
         run: msbuild net8.0_ProxyWPF.sln /p:Configuration=${{ matrix.configuration }}
 
-      # 7. 压缩构建结果（压缩包里直接是 exe 和依赖文件）
+      # -------- create zip (write to workspace root) --------
       - name: Create ZIP package
+        shell: pwsh
         run: |
-          $outputZip = Join-Path $env:GITHUB_WORKSPACE "net8.0_ProxyWPF-${{ matrix.configuration }}.zip"
+          $zipName = "net8.0_ProxyWPF-${{ matrix.configuration }}.zip"
+          $outputZip = Join-Path $env:GITHUB_WORKSPACE $zipName
+          Write-Host "Compressing to: $outputZip"
           Compress-Archive -Path "net8.0_ProxyWPF\bin\${{ matrix.configuration }}\net8.0-windows\*" -DestinationPath $outputZip -Force
-          Write-Host "ZIP created at $outputZip"
+          Write-Host "ZIP created."
 
-      # 8. 上传构建产物
+      # -------- debug: list zip / workspace to confirm path --------
+      - name: Debug - show ZIP and workspace files
+        shell: pwsh
+        run: |
+          $zipName = "net8.0_ProxyWPF-${{ matrix.configuration }}.zip"
+          $outputZip = Join-Path $env:GITHUB_WORKSPACE $zipName
+          Write-Host "Expect ZIP at: $outputZip"
+          Write-Host "Test-Path => $(Test-Path $outputZip)"
+          Write-Host "Top-level files in workspace:"
+          Get-ChildItem -Path $env:GITHUB_WORKSPACE -File -Force | ForEach-Object { Write-Host $_.FullName }
+          Write-Host "Any zip files (searching workspace):"
+          Get-ChildItem -Path $env:GITHUB_WORKSPACE -Filter "*.zip" -Recurse -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_.FullName }
+
+      # -------- upload artifact (use relative filename) --------
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: net8.0_ProxyWPF-${{ matrix.configuration }}
-          path: ${{ env.GITHUB_WORKSPACE }}/net8.0_ProxyWPF-${{ matrix.configuration }}.zip
-
+          path: net8.0_ProxyWPF-${{ matrix.configuration }}.zip
 
