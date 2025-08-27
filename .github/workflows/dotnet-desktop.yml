@@ -69,26 +69,21 @@ jobs:
 
       # 还原依赖
       - name: Restore
-        run: msbuild ProxyWPF.sln /t:Restore /p:Configuration=${{ matrix.configuration }}
+        run: msbuild net8.0_ProxyWPF.sln /t:Restore /p:Configuration=${{ matrix.configuration }}
 
       # 构建项目
       - name: Build
-        run: msbuild ProxyWPF.sln /p:Configuration=${{ matrix.configuration }}
-
-      # 运行测试（如果有测试项目）
-      - name: Test
-        run: dotnet test ProxyWPF.Tests/ProxyWPF.Tests.csproj
-        continue-on-error: true   # 没有测试项目的话可以删掉
+        run: msbuild net8.0_ProxyWPF.sln /p:Configuration=${{ matrix.configuration }}
 
       # 压缩构建结果（假设输出在 bin\Release\net8.0-windows\）
       - name: Create ZIP package
         run: |
-          cd ProxyWPF\bin\${{ matrix.configuration }}\net8.0-windows\
-          powershell Compress-Archive * ../../../ProxyWPF-${{ matrix.configuration }}.zip -Force
+          cd net8.0_ProxyWPF\bin\${{ matrix.configuration }}\net8.0-windows\
+          powershell Compress-Archive * ../../../net8.0_ProxyWPF-${{ matrix.configuration }}.zip -Force
 
       # 上传构建产物
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ProxyWPF-${{ matrix.configuration }}
-          path: ProxyWPF\bin\ProxyWPF-${{ matrix.configuration }}.zip
+          name: net8.0_ProxyWPF-${{ matrix.configuration }}
+          path: net8.0_ProxyWPF\bin\net8.0_ProxyWPF-${{ matrix.configuration }}.zip
