@@ -50,7 +50,7 @@ jobs:
 
     strategy:
       matrix:
-        configuration: [Release]   # 只打 Release 包，如果想要 Debug 也可以加进去
+        configuration: [Release]
 
     steps:
       # 1. 拉取代码
@@ -63,7 +63,7 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
-      # 3. 安装 MSBuild (WPF 必须)
+      # 3. 安装 MSBuild
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
@@ -75,16 +75,18 @@ jobs:
       - name: Build
         run: msbuild net8.0_ProxyWPF.sln /p:Configuration=${{ matrix.configuration }}
 
-
       # 7. 压缩构建结果（压缩包里直接是 exe 和依赖文件）
       - name: Create ZIP package
         run: |
-          powershell Compress-Archive -Path net8.0_ProxyWPF\bin\${{ matrix.configuration }}\net8.0-windows\* -DestinationPath $GITHUB_WORKSPACE/net8.0_ProxyWPF-${{ matrix.configuration }}.zip -Force
+          $outputZip = Join-Path $env:GITHUB_WORKSPACE "net8.0_ProxyWPF-${{ matrix.configuration }}.zip"
+          Compress-Archive -Path "net8.0_ProxyWPF\bin\${{ matrix.configuration }}\net8.0-windows\*" -DestinationPath $outputZip -Force
+          Write-Host "ZIP created at $outputZip"
 
       # 8. 上传构建产物
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: net8.0_ProxyWPF-${{ matrix.configuration }}
-          path: $GITHUB_WORKSPACE/net8.0_ProxyWPF-${{ matrix.configuration }}.zip
+          path: ${{ env.GITHUB_WORKSPACE }}/net8.0_ProxyWPF-${{ matrix.configuration }}.zip
+
 
