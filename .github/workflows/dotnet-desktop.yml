@@ -75,21 +75,16 @@ jobs:
       - name: Build
         run: msbuild net8.0_ProxyWPF.sln /p:Configuration=${{ matrix.configuration }}
 
-      # 6. 运行测试（如果有测试项目）
-      - name: Test
-        run: dotnet test net8.0_ProxyWPF.Tests/net8.0_ProxyWPF.Tests.csproj
-        continue-on-error: true   # 没有测试项目的话可以删掉
 
       # 7. 压缩构建结果（压缩包里直接是 exe 和依赖文件）
       - name: Create ZIP package
         run: |
-          cd net8.0_ProxyWPF\bin\${{ matrix.configuration }}\net8.0-windows
-          powershell Compress-Archive -Path * -DestinationPath ../../../net8.0_ProxyWPF-${{ matrix.configuration }}.zip -Force
+          powershell Compress-Archive -Path net8.0_ProxyWPF\bin\${{ matrix.configuration }}\net8.0-windows\* -DestinationPath $GITHUB_WORKSPACE/net8.0_ProxyWPF-${{ matrix.configuration }}.zip -Force
 
       # 8. 上传构建产物
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: net8.0_ProxyWPF-${{ matrix.configuration }}
-          path: net8.0_ProxyWPF-${{ matrix.configuration }}.zip
+          path: $GITHUB_WORKSPACE/net8.0_ProxyWPF-${{ matrix.configuration }}.zip
 
