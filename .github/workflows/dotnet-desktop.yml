@@ -53,37 +53,41 @@ jobs:
         configuration: [Release]   # 只打 Release 包，如果想要 Debug 也可以加进去
 
     steps:
-      # 拉取代码
+      # 1. 拉取代码
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 安装 .NET SDK
+      # 2. 安装 .NET SDK
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
 
-      # 安装 MSBuild (WPF 必须)
+      # 3. 安装 MSBuild (WPF 必须)
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
-      # 还原依赖
+      # 4. 还原依赖
       - name: Restore
         run: msbuild net8.0_ProxyWPF.sln /t:Restore /p:Configuration=${{ matrix.configuration }}
 
-      # 构建项目
+      # 5. 构建项目
       - name: Build
         run: msbuild net8.0_ProxyWPF.sln /p:Configuration=${{ matrix.configuration }}
 
-      # 压缩构建结果（假设输出在 bin\Release\net8.0-windows\）
+      # 6. 运行测试（如果有测试项目）
+      - name: Test
+        run: dotnet test net8.0_ProxyWPF.Tests/net8.0_ProxyWPF.Tests.csproj
+        continue-on-error: true   # 没有测试项目的话可以删掉
+
+      # 7. 压缩构建结果
       - name: Create ZIP package
         run: |
-          cd net8.0_ProxyWPF\bin\${{ matrix.configuration }}\net8.0-windows\
-          powershell Compress-Archive * ../../../net8.0_ProxyWPF-${{ matrix.configuration }}.zip -Force
+          powershell Compress-Archive -Path net8.0_ProxyWPF\bin\${{ matrix.configuration }}\net8.0-windows\* -DestinationPath net8.0_ProxyWPF-${{ matrix.configuration }}.zip -Force
 
-      # 上传构建产物
+      # 8. 上传构建产物
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: net8.0_ProxyWPF-${{ matrix.configuration }}
-          path: net8.0_ProxyWPF\bin\net8.0_ProxyWPF-${{ matrix.configuration }}.zip
+          path: net8.0_ProxyWPF-${{ matrix.configuration }}.zip
