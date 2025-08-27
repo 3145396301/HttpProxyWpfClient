@@ -1,0 +1,46 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <sys:String x:Key="Hello">안녕하세요</sys:String>
+    <sys:String x:Key="Exit">종료</sys:String>
+    <sys:String x:Key="Title">설절</sys:String>
+    <sys:String x:Key="ShearManagement">클립보드 관리</sys:String>
+    <sys:String x:Key="Shear">클립보드</sys:String>
+    <sys:String x:Key="Face">이모지</sys:String>
+    <sys:String x:Key="New">새로 만들기</sys:String>
+    <sys:String x:Key="About">정보</sys:String>
+    <sys:String x:Key="Index">번호</sys:String>
+    <sys:String x:Key="Name">이름</sys:String>
+    <sys:String x:Key="Type">유형</sys:String>
+    <sys:String x:Key="Content">내용</sys:String>
+    <sys:String x:Key="Setting">설정</sys:String>
+    <sys:String x:Key="Language">언어</sys:String>
+    <sys:String x:Key="Theme">테마</sys:String>
+    <sys:String x:Key="Font">글꼴</sys:String>
+    <sys:String x:Key="FontSize">글자 크기</sys:String>
+    <sys:String x:Key="FontColor">글자 색상</sys:String>
+    <sys:String x:Key="FontBackgroundColor">글자 배경색</sys:String>
+    <sys:String x:Key="User">사용자</sys:String>
+    <sys:String x:Key="Password">비밀번호</sys:String>
+    <sys:String x:Key="Login">로그인</sys:String>
+    <sys:String x:Key="Logout">로그아웃</sys:String>
+    <sys:String x:Key="Register">등록</sys:String>
+    <sys:String x:Key="UserName">사용자 이름</sys:String>
+    <sys:String x:Key="ConfirmPassword">비밀번호 확인</sys:String>
+    <sys:String x:Key="UserManagement">사용자 관리</sys:String>
+    <sys:String x:Key="Platform">플랫폼</sys:String>
+    <sys:String x:Key="PasswordBook">비밀번호 책</sys:String>
+    <sys:String x:Key="AddNewPassword">새 비밀번호 추가</sys:String>
+    <sys:String x:Key="MyPassword">내 비밀번호</sys:String>
+    <sys:String x:Key="Search">검색</sys:String>
+    <sys:String x:Key="Remark">비고</sys:String>
+    <sys:String x:Key="Copy">복사</sys:String>
+    <sys:String x:Key="Delete">삭제</sys:String>
+    <sys:String x:Key="Modify">수정</sys:String>
+    <sys:String x:Key="Generate">생성</sys:String>
+    <sys:String x:Key="GeneratePassword">비밀번호 생성</sys:String>
+    <sys:String x:Key="UserNameInputPrompt">사용자 이름/이메일/...</sys:String>
+
+    <sys:String x:Key="Save">저장</sys:String>
+</ResourceDictionary>

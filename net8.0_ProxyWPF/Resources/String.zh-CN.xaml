@@ -1,0 +1,25 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <sys:String x:Key="HomePage">主页</sys:String>
+    <sys:String x:Key="About">关于</sys:String>
+    <sys:String x:Key="Contact">联系</sys:String>
+    <sys:String x:Key="Blog">博客</sys:String>
+    <sys:String x:Key="Host">主机</sys:String>
+    <sys:String x:Key="Port">端口</sys:String>
+    <sys:String x:Key="Method">方法</sys:String>
+    <sys:String x:Key="Path">路径</sys:String>
+    <sys:String x:Key="Protocol">协议</sys:String>
+    <sys:String x:Key="Process">进程</sys:String>
+    <sys:String x:Key="UserName">用户名</sys:String>
+    <sys:String x:Key="Password">密码</sys:String>
+    <sys:String x:Key="Connect">连接</sys:String>
+    <sys:String x:Key="Disconnect">断开</sys:String>
+    <sys:String x:Key="Send">发送</sys:String>
+    <sys:String x:Key="Clear">清除</sys:String>
+    <sys:String x:Key="Encoding">编码</sys:String>
+    <sys:String x:Key="Chinese">中文</sys:String>
+    <sys:String x:Key="English">英文</sys:String>
+
+</ResourceDictionary>

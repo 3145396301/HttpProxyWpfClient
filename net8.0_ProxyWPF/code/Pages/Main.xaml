@@ -1,0 +1,65 @@
+<Page x:Class="net8._0_ProxyWPF.code.Pages.Main"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      xmlns:loc="clr-namespace:net8._0_ProxyWPF.code.Loc"
+      mc:Ignorable="d"
+
+      Title="Main"
+      DataContext="{Binding RelativeSource={RelativeSource Self}}"
+      >
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <StackPanel >
+            <ui:Button Click="block_OnClick">全部拦截</ui:Button>
+            <ui:Button Click="discharged_OnClick">全部放行</ui:Button>
+            <ui:Button>放行</ui:Button>
+        </StackPanel>
+        <!-- 主页面 -->
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*" />
+                <RowDefinition Height="1*" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*" />
+                <ColumnDefinition Width="1*" />
+            </Grid.ColumnDefinitions>
+
+
+            <!-- 左侧列表 -->
+            <ui:ListView Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" ItemsSource="{Binding Sessions}"
+                         SelectedItem="{Binding SelectedSession}" SelectionChanged="Selector_OnSelectionChanged">
+                <ui:ListView.View>
+                    <ui:GridView>
+                        <ui:GridViewColumn Header="{loc:Loc Host}" DisplayMemberBinding="{Binding Host}" />
+                        <ui:GridViewColumn Header="{loc:Loc Protocol}" DisplayMemberBinding="{Binding Protocol}" />
+                        <ui:GridViewColumn Header="{loc:Loc Method}" DisplayMemberBinding="{Binding Method}" />
+                        <ui:GridViewColumn Header="{loc:Loc Path}" DisplayMemberBinding="{Binding Url}" />
+                    </ui:GridView>
+                </ui:ListView.View>
+            </ui:ListView>
+
+
+            <!-- 右上侧 请求内容 -->
+            <Grid Grid.Row="0" Grid.Column="1" Name="Req">
+                <TextBox Name="Request" BorderThickness="0" Background="Transparent" Text="{Binding RequestMessage.AllMessage}"></TextBox>
+            </Grid>
+
+            <!-- 右下侧 响应内容 -->
+            <Grid Grid.Row="1" Grid.Column="1" Name="Resp">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="30" />
+                </Grid.RowDefinitions>
+                <TextBox Name="Response" BorderThickness="0" Background="Transparent" Text="{Binding ResponseMessage.AllMessage}"></TextBox>
+                <ui:Button Grid.Row="1" Click="Pass_OnClick">放行</ui:Button>
+            </Grid>
+        </Grid>
+    </Grid>
+</Page>
