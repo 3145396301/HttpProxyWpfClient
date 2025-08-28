@@ -1,0 +1,56 @@
+<Page x:Class="net8._0_ProxyWPF.code.Pages.Setting.SettingPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:local="clr-namespace:net8._0_ProxyWPF.code.Pages.Setting"
+      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      mc:Ignorable="d"
+      Title="SettingPage">
+    <Grid>
+        <ui:ListView>
+            <ui:ListViewItem>
+                <Expander Header="刷新代理">
+                    <Button Content="刷新" Name="RefreshProxyButton" Click="RefreshProxyButton_OnClick"/>
+                </Expander>
+
+            </ui:ListViewItem>
+            <ui:ListViewItem>
+                <Expander Header="本地代理设置">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                        </Grid.RowDefinitions>
+                        <Label Content="本地代理地址" Grid.Column="0" Grid.Row="0"/>
+                        <TextBox Grid.Column="1" Name="LocalProxyAddressTextBox"  Grid.Row="0" Text="0.0.0.0"/>
+                        <Label Content="本地代理端口" Grid.Column="0" Grid.Row="1"/>
+                        <TextBox Grid.Column="1" Name="LocalProxyPortTextBox" Grid.Row="1" Text="8000"/>
+                    </Grid>
+                </Expander>
+            </ui:ListViewItem>
+            <ui:ListViewItem>
+                <Expander Header="上游代理设置">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                        </Grid.RowDefinitions>
+                        <Label Content="上游代理地址" Grid.Column="0" Grid.Row="0"/>
+                        <TextBox Grid.Column="1" Grid.Row="0" Name="UpstreamProxyAddressTextBox" Text="127.0.0.1"/>
+                        <Label Content="上游代理端口" Grid.Column="0" Grid.Row="1"/>
+                        <TextBox Grid.Column="1" Grid.Row="1" Name="UpstreamProxyPortTextBox" Text="10808"/>
+                    </Grid>
+                </Expander>
+            </ui:ListViewItem>
+        </ui:ListView>
+    </Grid>
+</Page>

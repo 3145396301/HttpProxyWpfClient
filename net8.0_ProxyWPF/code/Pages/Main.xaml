@@ -43,6 +43,20 @@
                         <ui:GridViewColumn Header="{loc:Loc Path}" DisplayMemberBinding="{Binding Url}" />
                     </ui:GridView>
                 </ui:ListView.View>
+                <ui:ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Blocking}" Value="True">
+                                <Setter Property="Background" Value="Red"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Blocking}" Value="False">
+                                <Setter Property="Background" Value="White"/>
+                                <Setter Property="Foreground" Value="Black"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ui:ListView.ItemContainerStyle>
             </ui:ListView>
 
 
@@ -58,7 +72,10 @@
                     <RowDefinition Height="30" />
                 </Grid.RowDefinitions>
                 <TextBox Name="Response" BorderThickness="0" Background="Transparent" Text="{Binding ResponseMessage.AllMessage}"></TextBox>
-                <ui:Button Grid.Row="1" Click="Pass_OnClick">放行</ui:Button>
+                <StackPanel Grid.Row="1" Orientation="Horizontal">
+                    <ui:Button  Click="Pass_OnClick">放行</ui:Button> <ui:Button Name="ModifyRequestBody" Click="ModifyRequestBody_OnClick">快捷修改请求体</ui:Button>
+                </StackPanel>
+
             </Grid>
         </Grid>
     </Grid>

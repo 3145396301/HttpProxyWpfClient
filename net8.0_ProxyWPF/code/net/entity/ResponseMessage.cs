@@ -24,7 +24,11 @@ namespace net8._0_ProxyWPF.code.net.entity
         public string RespBody
         {
             get => _respBody;
-            set => SetProperty(ref _respBody, value);
+            set
+            {
+                SetProperty(ref _respBody, value);
+                OnPropertyChanged(nameof(AllMessage));
+            }
         }
 
         public string AllMessage
@@ -35,6 +39,8 @@ namespace net8._0_ProxyWPF.code.net.entity
             }
             set
             {
+
+
             }
         }
 

@@ -85,6 +85,7 @@
         <ui:NavigationView Grid.Row="1" PaneDisplayMode="Top">
             <ui:NavigationView.MenuItems>
                 <ui:NavigationViewItem Name="HomePage" Click="SelectionChanged"  Tag="Main" Content="Main"/>
+                <ui:NavigationViewItem Name="SettingPage" Click="SelectionChanged"  Tag="Setting" Content="Setting"/>
                 <!-- <ui:NavigationViewItem Click="SelectionChanged" Content="{loc:Loc Face}"/> -->
                 <!-- <ui:NavigationViewItem Click="SelectionChanged" Tag="PasswordManger" Content="{loc:Loc PasswordBook}"/> -->
                 <!-- <ui:NavigationViewItem Click="SelectionChanged" Tag="SettingManger" Content="{loc:Loc Setting}"/> -->

@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
 using net8._0_ProxyWPF.code.Pages;
+using net8._0_ProxyWPF.code.Pages.Setting;
 using Wpf.Ui.Controls;
 
 namespace net8._0_ProxyWPF
@@ -14,18 +15,19 @@ namespace net8._0_ProxyWPF
     {
 
 
-        private Dictionary<string, System.Windows.Controls.Page> pages =
+        public static Dictionary<string, System.Windows.Controls.Page> pages =
             new Dictionary<string, System.Windows.Controls.Page>()
             {
-
-                { "Main", new Main() }
+                { "Main", new Main() },
+                { "Setting", new SettingPage() }
             };
 
 
         public MainWindow()
         {
             InitializeComponent();
-
+            // 加载主页
+            RootFrame.Navigate(pages["Main"]);
         }
 
         // 标题栏鼠标按下：单击拖动，双击最大化/还原

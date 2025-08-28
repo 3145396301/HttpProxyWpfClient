@@ -19,6 +19,7 @@ namespace net8._0_ProxyWPF.code.net.entity
         private string _statusCode;
         private string _url;
         private string _method;
+        private bool _blocking;
 
         public long? BodySize
         {
@@ -85,6 +86,11 @@ namespace net8._0_ProxyWPF.code.net.entity
         {
             get=> _session;
         }
+        public bool Blocking
+        {
+            get=> _blocking;
+            set=> SetProperty(ref _blocking, value);
+        }
 
 
 
@@ -103,6 +109,10 @@ namespace net8._0_ProxyWPF.code.net.entity
             ClientConnectionId = session.ClientConnectionId;
             Exception = session.Exception;
             Host = session.HttpClient.Request.Host;
+            if (session.HttpClient.Request.HttpVersion.ToString()==new Version(2,0).ToString())
+            {
+                Host = session.HttpClient.Request.RequestUri.Authority;
+            }
             ProcessId = session.HttpClient.ProcessId.Value;
             Protocol = session.HttpClient.IsHttps?"https":"http";
             Method = session.HttpClient.Request.Method;
