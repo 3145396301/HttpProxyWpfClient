@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using net8._0_ProxyWPF.code.Pages;
 using net8._0_ProxyWPF.code.Pages.Setting;

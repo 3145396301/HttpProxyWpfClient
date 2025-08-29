@@ -6,11 +6,17 @@ namespace net8._0_ProxyWPF.code.net.entity
 {
     public class RequestMatch : BindableBase
     {
+        string _name;
         bool _all;
         string _url;
         string _method;
         Dictionary<string, string> _headers;
 
+        public string Name
+        {
+            get => _name;
+            set => SetProperty(ref _name, value);
+        }
         public bool All
         {
             get => _all;
@@ -65,6 +71,18 @@ namespace net8._0_ProxyWPF.code.net.entity
                 }
             }
             return true;
+        }
+        public RequestMatchVo ToRequestMatchVo()
+        {
+            RequestMatchVo requestMatchVo = new RequestMatchVo();
+            requestMatchVo.Name = Name;
+            requestMatchVo.Url = Url;
+            requestMatchVo.Method = Method;
+            foreach (var header in Headers)
+            {
+                requestMatchVo.AddHeader(header.Key, header.Value);
+            }
+            return requestMatchVo;
         }
     }
 }

@@ -39,12 +39,48 @@ public class RequestMatchVo :BindableBase
         Headers = new ObservableCollection<HeaderVo>();
     }
 
+    public void AddHeader(string name, string value)
+    {
+        Headers.Add(new HeaderVo()
+        {
+            Name = name,
+            Value = value,
+            RequestMatchVo = this
+        });
+    }
+
+    public void RemoveHeader(HeaderVo header)
+    {
+        Headers.Remove(header);
+        header.RequestMatchVo = null;
+    }
+
+    public void ClearHeaders()
+    {
+        foreach (var header in Headers)
+        {
+            header.RequestMatchVo = null;
+        }
+        Headers.Clear();
+    }
+
+    public RequestMatch ToRequestMatch()
+    {
+        var headers = new Dictionary<string, string>();
+        foreach (var header in Headers)
+        {
+            headers.Add(header.Name, header.Value);
+        }
+        return new RequestMatch(Url, Method, headers){Name = Name};
+    }
+
 }
 
 public class HeaderVo:BindableBase
 {
     private string _name;
     private string _value;
+    private RequestMatchVo _requestMatchVo;
 
     public string Name
     {
@@ -55,6 +91,12 @@ public class HeaderVo:BindableBase
     {
         get => _value;
         set => SetProperty(ref _value, value);
+    }
+
+    public RequestMatchVo RequestMatchVo
+    {
+        get => _requestMatchVo;
+        set => SetProperty(ref _requestMatchVo, value);
     }
 
 }

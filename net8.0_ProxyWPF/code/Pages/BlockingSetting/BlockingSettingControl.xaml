@@ -173,7 +173,7 @@
                                                                Content="新增请求头"
                                                                Appearance="Secondary"
                                                                MinWidth="100"
-
+                                                               Click="AddHeader_Click"
                                                                FontWeight="Normal"/>
                                                 </Grid>
                                             </Border>
@@ -208,6 +208,7 @@
                                                                        Content="删除"
                                                                        Appearance="Danger"
                                                                        MinWidth="60"
+                                                                       Click="DeleteHeader_Click"
                                                                        />
                                                         </Grid>
                                                     </DataTemplate>
@@ -219,14 +220,15 @@
                                                         Orientation="Horizontal"
                                                         HorizontalAlignment="Right"
                                                         Margin="0,8,0,0">
-                                                <ui:Button Content="保存更改"
-                                                           Appearance="Primary"
-                                                           MinWidth="80"
-                                                           Margin="0,0,8,0"
-                                                           />
+                                                <!-- <ui:Button Content="保存更改" -->
+                                                <!--            Appearance="Primary" -->
+                                                <!--            MinWidth="80" -->
+                                                <!--            Margin="0,0,8,0" -->
+                                                <!--            /> -->
                                                 <ui:Button Content="删除规则"
                                                            Appearance="Danger"
                                                            MinWidth="80"
+                                                           Click="DeleteRule_Click"
                                                            />
                                             </StackPanel>
                                         </Grid>

@@ -106,7 +106,7 @@ namespace net8._0_ProxyWPF.code.Pages
 
             proxyConnect.CreateProxyServer();
             proxyConnect.StartProxy();
-            // proxyConnect.SettingSystemProxy();
+            proxyConnect.SettingSystemProxy();
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -133,7 +133,12 @@ namespace net8._0_ProxyWPF.code.Pages
         private void block_OnClick(object sender, RoutedEventArgs e)
         {
             // RequestMatches.Add(new RequestMatch() { All = true });
-            DialogHelper.ShowDialogAsync<bool>("添加拦截规则", new BlockingSettingControl(),true,900D,600D);
+            BlockingSettingControl blockingSettingControl = new BlockingSettingControl(RequestMatches);
+            DialogHelper.ShowDialogAsync<bool>("添加拦截规则",blockingSettingControl,true,900D,600D,onClose: w =>
+            {
+                blockingSettingControl.UpdateRequestMatches();
+                Console.WriteLine("拦截规则保存成功");
+            });
         }
 
         private void discharged_OnClick(object sender, RoutedEventArgs e)
@@ -580,6 +585,15 @@ namespace net8._0_ProxyWPF.code.Pages
             proxyConnect.ResetProxy();
             proxyConnect.StartProxy();
             proxyConnect.SettingSystemProxy();
+        }
+
+        public void ResetRequestMatches(List<RequestMatch> requestMatches)
+        {
+            RequestMatches.Clear();
+            foreach (var requestMatch in requestMatches)
+            {
+                RequestMatches.Add(requestMatch);
+            }
         }
     }
 }

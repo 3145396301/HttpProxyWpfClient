@@ -16,7 +16,7 @@
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
         <!-- 标题栏：三列布局 -->
-        <Border x:Name="TitleBar"
+        <Border Grid.Row="0" x:Name="TitleBar"
                 Background="#FF1E1E1E"
                 Height="36"
                 VerticalAlignment="Top"
@@ -84,7 +84,7 @@
         </Border>
         <ui:NavigationView Grid.Row="1" PaneDisplayMode="Top">
             <ui:NavigationView.MenuItems>
-                <ui:NavigationViewItem Name="HomePage" Click="SelectionChanged"  Tag="Main" Content="Main"/>
+                <ui:NavigationViewItem Name="HomePage" Click="SelectionChanged"  Tag="Main" Content="主页"/>
                 <ui:NavigationViewItem Name="SettingPage" Click="SelectionChanged"  Tag="Setting" Content="Setting"/>
                 <!-- <ui:NavigationViewItem Click="SelectionChanged" Content="{loc:Loc Face}"/> -->
                 <!-- <ui:NavigationViewItem Click="SelectionChanged" Tag="PasswordManger" Content="{loc:Loc PasswordBook}"/> -->
