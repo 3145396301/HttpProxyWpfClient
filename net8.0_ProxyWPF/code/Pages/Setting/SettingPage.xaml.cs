@@ -14,8 +14,14 @@ public partial class SettingPage : Page
     {
         string localIp = LocalProxyAddressTextBox.Text;
         int localPort = int.Parse(LocalProxyPortTextBox.Text);
-        string upstreamIp = UpstreamProxyAddressTextBox.Text;
-        int upstreamPort = int.Parse(UpstreamProxyPortTextBox.Text);
+        string? upstreamIp = UpstreamProxyAddressTextBox.Text==""?null:UpstreamProxyAddressTextBox.Text;
+        string text = UpstreamProxyPortTextBox.Text;
+        int? upstreamPort=null;
+        if (text!="")
+        {
+            upstreamPort = int.Parse(text);
+        }
+
         Main page = MainWindow.pages["Main"] as  Main;
         page?.ResetProxy(localIp, localPort, upstreamIp, upstreamPort, null,null);
     }

@@ -15,11 +15,11 @@ namespace net8._0_ProxyWPF.code.net
     {
         private ProxyServer _proxyServer;
         private ExplicitProxyEndPoint _explicitProxyEndPoint;
-        public static ConcurrentDictionary<SessionEventArgs,SessionInfo> SemaphoreDict = new ConcurrentDictionary<SessionEventArgs, SessionInfo>();
+        // public static ConcurrentDictionary<SessionEventArgs,SessionInfo> SemaphoreDict = new ConcurrentDictionary<SessionEventArgs, SessionInfo>();
 
         private string _proxyHost;
         private int _proxyPort;
-        private string _upstreamIp;
+        private string? _upstreamIp;
         private int _upstreamPort;
         private string _upstreamUser;
         private string _upstreamPass;
@@ -43,7 +43,7 @@ namespace net8._0_ProxyWPF.code.net
             set => SetProperty(ref _proxyPort, value);
         }
 
-        public string UpstreamIp
+        public string? UpstreamIp
         {
             get => _upstreamIp;
             set => SetProperty(ref _upstreamIp, value);
@@ -150,10 +150,10 @@ namespace net8._0_ProxyWPF.code.net
         /// </summary>
         private async System.Threading.Tasks.Task ProxyServer_BeforeRequest(object sender, SessionEventArgs e)
         {
-            if (!SemaphoreDict.ContainsKey(e))
-            {
-                SemaphoreDict.TryAdd(e, new SessionInfo(e));
-            }
+            // if (!SemaphoreDict.ContainsKey(e))
+            // {
+            //     SemaphoreDict.TryAdd(e, new SessionInfo(e));
+            // }
             // 如果请求包含请求体，读取内容
             if (e.HttpClient.Request.HasBody)
             {
@@ -205,7 +205,7 @@ namespace net8._0_ProxyWPF.code.net
             return null;
         }
 
-        public void UpdateConfig(string proxyHost = null, int? proxyPort = null, string upstreamIp = null,
+        public void UpdateConfig(string proxyHost = null, int? proxyPort = null, string? upstreamIp = null,
             int? upstreamPort = null, string upstreamUser = null, string upstreamPass = null)
         {
             if (proxyHost != null)

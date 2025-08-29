@@ -6,7 +6,7 @@
                  xmlns:local="clr-namespace:ProxyWPF"
                  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
                  mc:Ignorable="d"
-                 Title="MainWindow" Height="350" Width="525"
+                 Title="MainWindow" Height="1000" Width="1500"
                  DataContext="{Binding RelativeSource={RelativeSource Self}}">
 
     <Grid>

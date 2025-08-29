@@ -8,6 +8,8 @@ using System.Windows.Controls;
 using System.Windows.Threading;
 using net8._0_ProxyWPF.code.net;
 using net8._0_ProxyWPF.code.net.entity;
+using net8._0_ProxyWPF.code.Pages.BlockingSetting;
+using net8._0_ProxyWPF.code.Pages.Util;
 using Titanium.Web.Proxy.EventArguments;
 using Titanium.Web.Proxy.Http;
 
@@ -73,12 +75,18 @@ namespace net8._0_ProxyWPF.code.Pages
                 {
                     if (RequestMatch.MatchingRules(httpClientRequest, requestMatch))
                     {
-                        //查找到对应的 RequestVo
-                        RequestVo requestVo = this.Sessions.FirstOrDefault(x => x.Session == session);
-                        this.Dispatcher.Invoke(() => { requestVo.Blocking = true; });
-                        ProxyConnect.SemaphoreDict[session].Semaphore.Wait();
-                        this.Dispatcher.Invoke(() => { requestVo.Blocking = false; });
-                        return true;
+
+                        lock (session)
+                        {
+                            //查找到对应的 RequestVo
+                            RequestVo requestVo = this.Sessions.FirstOrDefault(x => x.Session == session);
+                            this.Dispatcher.Invoke(() => { requestVo.Blocking = true; });
+                            // ProxyConnect.SemaphoreDict[session].Semaphore.Wait();
+                            Monitor.Wait(session);
+                            this.Dispatcher.Invoke(() => { requestVo.Blocking = false; });
+                            return true;
+                        }
+
                     }
                 }
 
@@ -98,7 +106,7 @@ namespace net8._0_ProxyWPF.code.Pages
 
             proxyConnect.CreateProxyServer();
             proxyConnect.StartProxy();
-            proxyConnect.SettingSystemProxy();
+            // proxyConnect.SettingSystemProxy();
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -124,15 +132,19 @@ namespace net8._0_ProxyWPF.code.Pages
 
         private void block_OnClick(object sender, RoutedEventArgs e)
         {
-            RequestMatches.Add(new RequestMatch() { All = true });
+            // RequestMatches.Add(new RequestMatch() { All = true });
+            DialogHelper.ShowDialogAsync<bool>("添加拦截规则", new BlockingSettingControl(),true,900D,600D);
         }
 
         private void discharged_OnClick(object sender, RoutedEventArgs e)
         {
             RequestMatches.Clear();
-            foreach (KeyValuePair<SessionEventArgs, SessionInfo> keyValuePair in ProxyConnect.SemaphoreDict)
+            foreach (RequestVo requestVo in Sessions)
             {
-                keyValuePair.Value.Semaphore.Release();
+                lock (requestVo.Session)
+                {
+                    Monitor.Pulse(requestVo.Session);
+                }
             }
         }
 
@@ -152,18 +164,10 @@ namespace net8._0_ProxyWPF.code.Pages
             }
             finally
             {
-                // 无论如何都释放信号量，避免死锁
-                if (ProxyConnect.SemaphoreDict.TryGetValue(SelectedSession.Session, out var semWrapper) &&
-                    semWrapper.Semaphore != null)
+                // 无论如何都释放，避免死锁
+                lock (SelectedSession.Session)
                 {
-                    try
-                    {
-                        semWrapper.Semaphore.Release();
-                    }
-                    catch
-                    {
-                        /* 忽略重复释放异常等 */
-                    }
+                    Monitor.Pulse(SelectedSession.Session);
                 }
             }
         }
@@ -564,7 +568,7 @@ namespace net8._0_ProxyWPF.code.Pages
             }
         }
 
-        public void ResetProxy(string proxyHost = null, int? proxyPort = null, string upstreamIp = null,
+        public void ResetProxy(string proxyHost = null, int? proxyPort = null, string? upstreamIp = null,
         int? upstreamPort = null, string upstreamUser = null, string upstreamPass = null)
         {
             proxyConnect.ProxyHost = proxyHost;

@@ -16,5 +16,7 @@
             <!-- <Setter Property="FontSize" Value="16" /> -->
             <!-- </Style> -->
         </ResourceDictionary>
+
     </Application.Resources>
+
 </Application>

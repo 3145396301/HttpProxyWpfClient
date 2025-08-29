@@ -6,76 +6,123 @@
       xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
       xmlns:loc="clr-namespace:net8._0_ProxyWPF.code.Loc"
       mc:Ignorable="d"
-
       Title="Main"
-      DataContext="{Binding RelativeSource={RelativeSource Self}}"
-      >
-    <Grid>
+      DataContext="{Binding RelativeSource={RelativeSource Self}}">
+
+    <Grid Margin="5">
         <Grid.RowDefinitions>
-            <RowDefinition Height="30" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <StackPanel >
-            <ui:Button Click="block_OnClick">全部拦截</ui:Button>
+
+        <!-- 顶部按钮栏 -->
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+            <ui:Button Click="block_OnClick" Margin="0,0,5,0">拦截</ui:Button>
             <ui:Button Click="discharged_OnClick">全部放行</ui:Button>
-            <ui:Button>放行</ui:Button>
         </StackPanel>
-        <!-- 主页面 -->
+
+        <!-- 主内容区域 -->
         <Grid Grid.Row="1">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="1*" />
-                <RowDefinition Height="1*" />
-            </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1*" />
-                <ColumnDefinition Width="1*" />
+                <ColumnDefinition Width="2*" MinWidth="300" />
+                <ColumnDefinition Width="5" />
+                <ColumnDefinition Width="3*" MinWidth="400" />
             </Grid.ColumnDefinitions>
 
-
-            <!-- 左侧列表 -->
-            <ui:ListView Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" ItemsSource="{Binding Sessions}"
-                         SelectedItem="{Binding SelectedSession}" SelectionChanged="Selector_OnSelectionChanged">
+            <!-- 左侧会话列表 -->
+            <ui:ListView Grid.Column="0" ItemsSource="{Binding Sessions}"
+                         SelectedItem="{Binding SelectedSession}"
+                         SelectionChanged="Selector_OnSelectionChanged"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         ScrollViewer.CanContentScroll="False"
+                         VirtualizingPanel.IsVirtualizing="False">
                 <ui:ListView.View>
                     <ui:GridView>
-                        <ui:GridViewColumn Header="{loc:Loc Host}" DisplayMemberBinding="{Binding Host}" />
-                        <ui:GridViewColumn Header="{loc:Loc Protocol}" DisplayMemberBinding="{Binding Protocol}" />
-                        <ui:GridViewColumn Header="{loc:Loc Method}" DisplayMemberBinding="{Binding Method}" />
-                        <ui:GridViewColumn Header="{loc:Loc Path}" DisplayMemberBinding="{Binding Url}" />
+                        <ui:GridViewColumn Header="阻塞" Width="40">
+                            <ui:GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Ellipse Width="12" Height="12" HorizontalAlignment="Center" VerticalAlignment="Center" Fill="Red">
+                                        <Ellipse.Style>
+                                            <Style TargetType="Ellipse">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Blocking}" Value="True">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Ellipse.Style>
+                                    </Ellipse>
+                                </DataTemplate>
+                            </ui:GridViewColumn.CellTemplate>
+                        </ui:GridViewColumn>
+                        <ui:GridViewColumn Header="{loc:Loc Host}" DisplayMemberBinding="{Binding Host}" Width="120" />
+                        <ui:GridViewColumn Header="{loc:Loc Protocol}" DisplayMemberBinding="{Binding Protocol}" Width="70" />
+                        <ui:GridViewColumn Header="{loc:Loc Method}" DisplayMemberBinding="{Binding Method}" Width="70" />
+                        <ui:GridViewColumn Header="{loc:Loc Path}" DisplayMemberBinding="{Binding Url}" Width="200" />
                     </ui:GridView>
                 </ui:ListView.View>
-                <ui:ListView.ItemContainerStyle>
-                    <Style TargetType="ListViewItem">
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding Blocking}" Value="True">
-                                <Setter Property="Background" Value="Red"/>
-                                <Setter Property="Foreground" Value="White"/>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Blocking}" Value="False">
-                                <Setter Property="Background" Value="White"/>
-                                <Setter Property="Foreground" Value="Black"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </ui:ListView.ItemContainerStyle>
             </ui:ListView>
 
+            <!-- 分割线 -->
+            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch"
+                          Background="Transparent" Cursor="SizeWE" />
 
-            <!-- 右上侧 请求内容 -->
-            <Grid Grid.Row="0" Grid.Column="1" Name="Req">
-                <TextBox Name="Request" BorderThickness="0" Background="Transparent" Text="{Binding RequestMessage.AllMessage}"></TextBox>
-            </Grid>
-
-            <!-- 右下侧 响应内容 -->
-            <Grid Grid.Row="1" Grid.Column="1" Name="Resp">
+            <!-- 右侧详情区域 -->
+            <Grid Grid.Column="2">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
-                    <RowDefinition Height="30" />
+                    <RowDefinition Height="5" />
+                    <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                <TextBox Name="Response" BorderThickness="0" Background="Transparent" Text="{Binding ResponseMessage.AllMessage}"></TextBox>
-                <StackPanel Grid.Row="1" Orientation="Horizontal">
-                    <ui:Button  Click="Pass_OnClick">放行</ui:Button> <ui:Button Name="ModifyRequestBody" Click="ModifyRequestBody_OnClick">快捷修改请求体</ui:Button>
-                </StackPanel>
 
+                <!-- 请求内容 -->
+                <Border Grid.Row="0" CornerRadius="3" BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <ui:TextBlock Text="请求内容" Margin="5,2" FontWeight="SemiBold" Foreground="White"/>
+
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                            <ui:TextBox Name="Request" BorderThickness="0" Background="Transparent"
+                                     Text="{Binding RequestMessage.AllMessage}" TextWrapping="NoWrap"
+                                     FontFamily="Consolas" AcceptsReturn="True" />
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+
+                <!-- 垂直分割线 -->
+                <GridSplitter Grid.Row="1" Height="5" HorizontalAlignment="Stretch"
+                              Background="Transparent" Cursor="SizeNS" />
+
+                <!-- 响应内容 -->
+                <Border Grid.Row="2" CornerRadius="3" BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <ui:TextBlock Text="响应内容" Margin="5,2" FontWeight="SemiBold"
+                                   Foreground="White" />
+
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                            <ui:TextBox Name="Response" BorderThickness="0" Background="Transparent"
+                                     Text="{Binding ResponseMessage.AllMessage}" TextWrapping="NoWrap"
+                                     FontFamily="Consolas" AcceptsReturn="True" />
+                        </ScrollViewer>
+
+                        <!-- 操作按钮 -->
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5">
+                            <ui:Button Click="Pass_OnClick" Margin="0,0,5,0">放行</ui:Button>
+                            <ui:Button Name="ModifyRequestBody" Click="ModifyRequestBody_OnClick">快捷修改请求体</ui:Button>
+                        </StackPanel>
+                    </Grid>
+                </Border>
             </Grid>
         </Grid>
     </Grid>
