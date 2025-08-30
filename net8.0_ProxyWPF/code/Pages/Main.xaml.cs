@@ -613,14 +613,18 @@ namespace net8._0_ProxyWPF.code.Pages
                         this.Dispatcher.Invoke(() =>
                         {
                             Sessions.Remove(item);
+                            item.Session.Dispose();
                         });
                         Console.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")},删除了");
                     }
                 }
             })).Start();
+        }
 
-
-
+        public void StopProxy()
+        {
+            proxyConnect.StopSystemProxy();
+            proxyConnect.StopProxy();
         }
     }
 }

@@ -25,4 +25,10 @@ public partial class SettingPage : Page
         Main page = MainWindow.pages["Main"] as  Main;
         page?.ResetProxy(localIp, localPort, upstreamIp, upstreamPort, null,null);
     }
+
+    private void CloseProxyButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        Main page = MainWindow.pages["Main"] as  Main;
+        page?.StopProxy();
+    }
 }

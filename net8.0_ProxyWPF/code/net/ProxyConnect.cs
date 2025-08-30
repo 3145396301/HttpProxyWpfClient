@@ -117,8 +117,9 @@ namespace net8._0_ProxyWPF.code.net
         public void CreateProxyServer()
         {
             ProxyServer proxyServer = new ProxyServer();
+            proxyServer.MaxCachedConnections = 40;
             proxyServer.ForwardToUpstreamGateway = true;
-            proxyServer.EnableHttp2 = true;
+            // proxyServer.EnableHttp2 = true;
             _explicitProxyEndPoint = new ExplicitProxyEndPoint(IPAddress.Parse(_proxyHost), _proxyPort);
             proxyServer.AddEndPoint(_explicitProxyEndPoint);
             if (_upstreamIp != null && _upstreamPort != -1)
