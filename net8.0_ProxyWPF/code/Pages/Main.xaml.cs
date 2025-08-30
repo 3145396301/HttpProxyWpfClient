@@ -75,7 +75,6 @@ namespace net8._0_ProxyWPF.code.Pages
                 {
                     if (RequestMatch.MatchingRules(httpClientRequest, requestMatch))
                     {
-
                         lock (session)
                         {
                             //查找到对应的 RequestVo
@@ -86,23 +85,11 @@ namespace net8._0_ProxyWPF.code.Pages
                             this.Dispatcher.Invoke(() => { requestVo.Blocking = false; });
                             return true;
                         }
-
                     }
                 }
 
                 return true;
             });
-            // proxyConnect.AddBeforeResponseTask("响应拦截", 2, session =>
-            // {
-            //     Request httpClientRequest = session.HttpClient.Request;
-            //     Response httpClientResponse = session.HttpClient.Response;
-            //     if (RequestMatch.MatchingRules(httpClientRequest, new RequestMatch() { All = true }))
-            //     {
-            //         Console.WriteLine("响应拦截: 协议版本：" + httpClientResponse.HttpVersion);
-            //     }
-            //
-            //     return true;
-            // });
 
             proxyConnect.CreateProxyServer();
             proxyConnect.StartProxy();
@@ -143,7 +130,6 @@ namespace net8._0_ProxyWPF.code.Pages
 
         private void discharged_OnClick(object sender, RoutedEventArgs e)
         {
-            RequestMatches.Clear();
             foreach (RequestVo requestVo in Sessions)
             {
                 lock (requestVo.Session)
