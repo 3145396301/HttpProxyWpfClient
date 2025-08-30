@@ -52,26 +52,42 @@ namespace net8._0_ProxyWPF.code.net.entity
         public static bool MatchingRules(Request request, RequestMatch requestMatch)
         {
             if (requestMatch.All) return true;
+
             string url = requestMatch.Url;
             string method = requestMatch.Method;
             Dictionary<string, string> headers = requestMatch.Headers;
-            // TODO: 匹配规则 匹配请求中的URL、方法、请求头、请求体  等，全部匹配才返回true
+
+            // URL 部分匹配
             if (url != null && !request.RequestUri.AbsoluteUri.Contains(url))
                 return false;
-            if (method != null && !request.Method.Equals(method))
+
+            // 方法匹配（忽略大小写）
+            if (method != null && !request.Method.Equals(method, StringComparison.OrdinalIgnoreCase))
                 return false;
-            // headers 如果 val = null 则只匹配 key
-            List<HttpHeader> httpHeaders = request.Headers.GetAllHeaders();
-            foreach (var header in httpHeaders)
+
+            // 请求头匹配
+            if (headers != null && headers.Count > 0)
             {
-                if (headers != null && headers.ContainsKey(header.Name))
+                // 转成忽略大小写的字典，便于查找
+                var headersIgnoreCase = new Dictionary<string, string>(headers, StringComparer.OrdinalIgnoreCase);
+
+                List<HttpHeader> httpHeaders = request.Headers.GetAllHeaders();
+                foreach (var kv in headersIgnoreCase)
                 {
-                    if (headers[header.Name] != null && !header.Value.Contains(headers[header.Name]))
+                    var targetHeader = httpHeaders.FirstOrDefault(h =>
+                        h.Name.Equals(kv.Key, StringComparison.OrdinalIgnoreCase));
+
+                    if (targetHeader == null) return false; // 缺少 key
+
+                    // 如果要求 value 也要匹配
+                    if (kv.Value != null && !targetHeader.Value.Contains(kv.Value))
                         return false;
                 }
             }
+
             return true;
         }
+
         public RequestMatchVo ToRequestMatchVo()
         {
             RequestMatchVo requestMatchVo = new RequestMatchVo();

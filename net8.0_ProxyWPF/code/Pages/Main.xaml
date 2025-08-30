@@ -35,7 +35,8 @@
                          SelectionChanged="Selector_OnSelectionChanged"
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                          ScrollViewer.CanContentScroll="False"
-                         VirtualizingPanel.IsVirtualizing="False">
+                         VirtualizingPanel.IsVirtualizing="False"
+                         KeyDown="UIElement_OnKeyDown">
                 <ui:ListView.View>
                     <ui:GridView>
                         <ui:GridViewColumn Header="阻塞" Width="40">

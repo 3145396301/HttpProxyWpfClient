@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -5,6 +6,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Threading;
 using net8._0_ProxyWPF.code.net;
 using net8._0_ProxyWPF.code.net.entity;
@@ -28,6 +30,12 @@ namespace net8._0_ProxyWPF.code.Pages
             set
             {
                 SetField(ref _selectedSession, value);
+                if (value==null)
+                {
+                    this.RequestMessage = null;
+                    this.ResponseMessage = null;
+                    return;
+                }
                 this.RequestMessage = new RequestMessage(value.Session);
                 this.ResponseMessage = new ResponseMessage(value.Session);
             }
@@ -142,6 +150,10 @@ namespace net8._0_ProxyWPF.code.Pages
         private void Pass_OnClick(object sender, RoutedEventArgs e)
         {
             string responseText = Response.Text;
+            if (SelectedSession==null)
+            {
+                return;
+            }
             Response response = SelectedSession.Session.HttpClient.Response;
 
             try
@@ -580,6 +592,35 @@ namespace net8._0_ProxyWPF.code.Pages
             {
                 RequestMatches.Add(requestMatch);
             }
+        }
+
+        private void UIElement_OnKeyDown(object sender, KeyEventArgs e)
+        {
+            ListView? listView = sender as ListView;
+            IList listViewSelectedItems = listView.SelectedItems;
+            List<RequestVo> selectedItems = new List<RequestVo>();
+            foreach (var item in listViewSelectedItems)
+            {
+                selectedItems.Add(item as RequestVo);
+            }
+            new Thread((() =>
+            {
+                if (e.Key == Key.Delete)
+                {
+                    Console.WriteLine($"数量：{selectedItems.Count}");
+                    foreach (var item in selectedItems)
+                    {
+                        this.Dispatcher.Invoke(() =>
+                        {
+                            Sessions.Remove(item);
+                        });
+                        Console.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")},删除了");
+                    }
+                }
+            })).Start();
+
+
+
         }
     }
 }
