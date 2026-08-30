@@ -7,7 +7,7 @@
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              mc:Ignorable="d"
              DataContext="{Binding RelativeSource={RelativeSource Self}}"
-             d:DesignHeight="600" d:DesignWidth="800">
+             d:DesignHeight="700" d:DesignWidth="1000">
 
     <Border Padding="16" Background="{DynamicResource SystemControlPageBackgroundChromeMediumLowBrush}">
         <Grid>
@@ -16,7 +16,7 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <!-- Header Section -->
+            <!-- 新增分组 -->
             <Border Grid.Row="0"
                     Padding="16"
                     Margin="0,0,0,16"
@@ -33,27 +33,27 @@
 
                     <Label Grid.Column="0"
                            VerticalAlignment="Center"
-                           Content="规则名称"
+                           Content="分组名称"
                            Margin="0,0,12,0"
                            FontWeight="SemiBold" />
 
                     <ui:TextBox Grid.Column="1"
-                                PlaceholderText="请输入名称"
+                                PlaceholderText="请输入分组名称"
                                 VerticalAlignment="Center"
-                                Name="NewRuleName"
+                                Name="NewGroupName"
                                 Margin="0,0,12,0" />
 
                     <ui:Button Grid.Column="2"
                                VerticalAlignment="Center"
                                Appearance="Primary"
-                               Content="新增规则"
+                               Content="新增分组"
                                MinWidth="100"
-                               Click="NewRule_OnClick"
+                               Click="NewGroup_OnClick"
                                FontWeight="SemiBold" />
                 </Grid>
             </Border>
 
-            <!-- Rules List Section -->
+            <!-- 分组列表 -->
             <Border Grid.Row="1"
                     Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
                     CornerRadius="6"
@@ -65,178 +65,256 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <!-- List Header -->
                     <Border Grid.Row="0"
                             Padding="12,8"
                             Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}">
-                        <TextBlock Text="当前拦截规则"
+                        <TextBlock Text="拦截规则分组"
                                    FontWeight="Bold"
                                    VerticalAlignment="Center" />
                     </Border>
 
-                    <!-- Rules List -->
-                    <ui:ListView Grid.Row="1"
-                                 ItemsSource="{Binding requestMatches}"
-                                 Padding="8"
-                                 BorderThickness="0"
-                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                 ScrollViewer.CanContentScroll="False"
-                                 VirtualizingPanel.IsVirtualizing="False">
-                        <ui:ListView.ItemContainerStyle>
-                            <Style TargetType="ui:ListViewItem" BasedOn="{StaticResource {x:Type ui:ListViewItem}}">
-                                <Setter Property="Margin" Value="0,0,0,8" />
-                                <Setter Property="Padding" Value="0" />
-                                <Setter Property="BorderThickness" Value="0" />
-                                <Setter Property="Background" Value="Transparent" />
-                            </Style>
-                        </ui:ListView.ItemContainerStyle>
-
-                        <ui:ListView.ItemTemplate>
-                            <DataTemplate>
-                                <Border Margin="0,0,0,8"
-                                        Padding="12"
-                                        Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
-                                        CornerRadius="4"
-                                        BorderThickness="1"
-                                        BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
-                                    <Expander Header="{Binding Name}"
-                                              FontWeight="SemiBold"
-                                              IsExpanded="False">
-                                        <Grid Margin="0,8,0,0">
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto" />
-                                                <RowDefinition Height="Auto" />
-                                                <RowDefinition Height="Auto" />
-                                                <RowDefinition Height="Auto" />
-                                                <RowDefinition Height="Auto" />
-                                            </Grid.RowDefinitions>
-
-                                            <!-- Rule Properties -->
-                                            <Grid Grid.Row="0" Margin="0,0,0,12">
-                                                <Grid.RowDefinitions>
-                                                    <RowDefinition Height="Auto" />
-                                                    <RowDefinition Height="Auto" />
-                                                    <RowDefinition Height="Auto" />
-                                                </Grid.RowDefinitions>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="*" />
-                                                </Grid.ColumnDefinitions>
-
-                                                <Label Grid.Row="0" Grid.Column="0"
-                                                       Content="名称:"
-                                                       Margin="0,0,12,8"
-                                                       FontWeight="SemiBold" />
-                                                <TextBox Grid.Row="0" Grid.Column="1"
-                                                         Name="Name"
-                                                         Margin="0,0,0,8"
-                                                         Text="{Binding Name, Mode=TwoWay}" />
-
-                                                <Label Grid.Row="1" Grid.Column="0"
-                                                       Content="URL:"
-                                                       Margin="0,0,12,8"
-                                                       FontWeight="SemiBold" />
-                                                <TextBox Grid.Row="1" Grid.Column="1"
-                                                         Name="Url"
-                                                         Margin="0,0,0,8"
-                                                         Text="{Binding Url, Mode=TwoWay}" />
-
-                                                <Label Grid.Row="2" Grid.Column="0"
-                                                       Content="方法:"
-                                                       Margin="0,0,12,8"
-                                                       FontWeight="SemiBold" />
-                                                <TextBox Grid.Row="2" Grid.Column="1"
-                                                         Name="Method"
-                                                         Margin="0,0,0,0"
-                                                         Text="{Binding Method, Mode=TwoWay}" />
-                                            </Grid>
-
-                                            <!-- Headers Section Header -->
-                                            <Border Grid.Row="1"
-                                                    Padding="8"
-                                                    Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
-                                                    CornerRadius="4"
-                                                    Margin="0,0,0,8">
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding groups}" Margin="8">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Margin="0,0,0,10"
+                                            Padding="12"
+                                            Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                                            CornerRadius="4"
+                                            BorderThickness="1"
+                                            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+                                        <Expander FontWeight="SemiBold" IsExpanded="False">
+                                            <Expander.Header>
                                                 <Grid>
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="Auto" />
                                                         <ColumnDefinition Width="*" />
                                                         <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="Auto" />
                                                     </Grid.ColumnDefinitions>
 
-                                                    <TextBlock Grid.Column="0"
-                                                               Text="请求头规则"
-                                                               FontWeight="SemiBold"
-                                                               VerticalAlignment="Center"/>
+                                                    <CheckBox Grid.Column="0"
+                                                              IsChecked="{Binding Enabled, Mode=TwoWay}"
+                                                              Content="启用"
+                                                              Margin="0,0,12,0"
+                                                              VerticalAlignment="Center" />
+
+                                                    <TextBox Grid.Column="1"
+                                                             Text="{Binding Name, Mode=TwoWay}"
+                                                             Margin="0,0,12,0"
+                                                             VerticalAlignment="Center" />
 
                                                     <ui:Button Grid.Column="2"
-                                                               Content="新增请求头"
+                                                               Content="新增规则"
                                                                Appearance="Secondary"
-                                                               MinWidth="100"
-                                                               Click="AddHeader_Click"
-                                                               FontWeight="Normal"/>
-                                                </Grid>
-                                            </Border>
+                                                               MinWidth="90"
+                                                               Margin="0,0,8,0"
+                                                               Click="AddRule_Click" />
 
-                                            <!-- Headers List -->
-                                            <ui:ListView Grid.Row="2"
-                                                         ItemsSource="{Binding Headers}"
-                                                         Margin="0,0,0,12"
-                                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                                    <ui:Button Grid.Column="3"
+                                                               Content="删除分组"
+                                                               Appearance="Danger"
+                                                               MinWidth="90"
+                                                               Click="DeleteGroup_Click" />
+                                                </Grid>
+                                            </Expander.Header>
+
+                                            <ui:ListView ItemsSource="{Binding Rules}"
+                                                         Margin="0,8,0,0"
+                                                         Padding="0"
+                                                         BorderThickness="0"
+                                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                                         ScrollViewer.CanContentScroll="False"
+                                                         VirtualizingPanel.IsVirtualizing="False">
+                                                <ui:ListView.ItemContainerStyle>
+                                                    <Style TargetType="ui:ListViewItem" BasedOn="{StaticResource {x:Type ui:ListViewItem}}">
+                                                        <Setter Property="Margin" Value="0,0,0,8" />
+                                                        <Setter Property="Padding" Value="0" />
+                                                        <Setter Property="BorderThickness" Value="0" />
+                                                        <Setter Property="Background" Value="Transparent" />
+                                                    </Style>
+                                                </ui:ListView.ItemContainerStyle>
+
                                                 <ui:ListView.ItemTemplate>
                                                     <DataTemplate>
-                                                        <Grid Margin="0,4">
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="*" />
-                                                                <ColumnDefinition Width="*" />
-                                                                <ColumnDefinition Width="Auto" />
-                                                            </Grid.ColumnDefinitions>
+                                                        <Border Margin="0,0,0,8"
+                                                                Padding="12"
+                                                                Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                                                                CornerRadius="4"
+                                                                BorderThickness="1"
+                                                                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+                                                            <Expander FontWeight="SemiBold" IsExpanded="False">
+                                                                <Expander.Header>
+                                                                    <StackPanel Orientation="Horizontal">
+                                                                        <CheckBox IsChecked="{Binding Enabled, Mode=TwoWay}"
+                                                                                  Content="启用"
+                                                                                  Margin="0,0,12,0"
+                                                                                  VerticalAlignment="Center" />
+                                                                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                                                                    </StackPanel>
+                                                                </Expander.Header>
 
-                                                            <ui:TextBox Grid.Column="0"
-                                                                     Margin="0,0,4,0"
-                                                                     Text="{Binding Name, Mode=TwoWay}"
-                                                                     VerticalContentAlignment="Center"
-                                                                     PlaceholderText="Header名称"/>
+                                                                <Grid Margin="0,8,0,0">
+                                                                    <Grid.RowDefinitions>
+                                                                        <RowDefinition Height="Auto" />
+                                                                        <RowDefinition Height="Auto" />
+                                                                        <RowDefinition Height="Auto" />
+                                                                        <RowDefinition Height="Auto" />
+                                                                        <RowDefinition Height="Auto" />
+                                                                    </Grid.RowDefinitions>
 
-                                                            <ui:TextBox Grid.Column="1"
-                                                                        Margin="4,0,4,0"
-                                                                        Text="{Binding Value, Mode=TwoWay}"
-                                                                        VerticalContentAlignment="Center"
-                                                                        PlaceholderText="Header值"/>
+                                                                    <!-- 名称 / 域名 / URL / 方法 -->
+                                                                    <Grid Grid.Row="0" Margin="0,0,0,12">
+                                                                        <Grid.RowDefinitions>
+                                                                            <RowDefinition Height="Auto" />
+                                                                            <RowDefinition Height="Auto" />
+                                                                            <RowDefinition Height="Auto" />
+                                                                            <RowDefinition Height="Auto" />
+                                                                        </Grid.RowDefinitions>
+                                                                        <Grid.ColumnDefinitions>
+                                                                            <ColumnDefinition Width="Auto" />
+                                                                            <ColumnDefinition Width="*" />
+                                                                            <ColumnDefinition Width="Auto" />
+                                                                        </Grid.ColumnDefinitions>
 
-                                                            <ui:Button Grid.Column="2"
-                                                                       Content="删除"
-                                                                       Appearance="Danger"
-                                                                       MinWidth="60"
-                                                                       Click="DeleteHeader_Click"
-                                                                       />
-                                                        </Grid>
+                                                                        <Label Grid.Row="0" Grid.Column="0" Content="名称:" Margin="0,0,12,8" FontWeight="SemiBold" />
+                                                                        <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,0,0,8"
+                                                                                 Text="{Binding Name, Mode=TwoWay}" />
+
+                                                                        <Label Grid.Row="1" Grid.Column="0" Content="域名:" Margin="0,0,12,8" FontWeight="SemiBold" />
+                                                                        <ui:TextBox Grid.Row="1" Grid.Column="1" Margin="0,0,12,8"
+                                                                                 Text="{Binding Domain, Mode=TwoWay}"
+                                                                                 PlaceholderText="例如: example.com" />
+                                                                        <CheckBox Grid.Row="1" Grid.Column="2" Margin="0,0,0,8" VerticalAlignment="Center"
+                                                                                  Content="正则"
+                                                                                  IsChecked="{Binding DomainUseRegex, Mode=TwoWay}" />
+
+                                                                        <Label Grid.Row="2" Grid.Column="0" Content="URL:" Margin="0,0,12,8" FontWeight="SemiBold" />
+                                                                        <ui:TextBox Grid.Row="2" Grid.Column="1" Margin="0,0,12,8"
+                                                                                 Text="{Binding Url, Mode=TwoWay}"
+                                                                                 PlaceholderText="匹配完整 URL" />
+                                                                        <CheckBox Grid.Row="2" Grid.Column="2" Margin="0,0,0,8" VerticalAlignment="Center"
+                                                                                  Content="正则"
+                                                                                  IsChecked="{Binding UrlUseRegex, Mode=TwoWay}" />
+
+                                                                        <Label Grid.Row="3" Grid.Column="0" Content="方法:" Margin="0,0,12,0" FontWeight="SemiBold" />
+                                                                        <ui:TextBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2"
+                                                                                 Text="{Binding Method, Mode=TwoWay}"
+                                                                                 PlaceholderText="例如: GET / POST，留空不限制" />
+                                                                    </Grid>
+
+                                                                    <!-- 拦截阶段 -->
+                                                                    <Border Grid.Row="1"
+                                                                            Padding="8"
+                                                                            Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                                                                            CornerRadius="4"
+                                                                            Margin="0,0,0,8">
+                                                                        <StackPanel Orientation="Horizontal">
+                                                                            <TextBlock Text="拦截阶段:" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,12,0" />
+                                                                            <CheckBox Content="上行拦截（请求）" Margin="0,0,16,0"
+                                                                                      IsChecked="{Binding InterceptRequest, Mode=TwoWay}" />
+                                                                            <CheckBox Content="下行拦截（响应）"
+                                                                                      IsChecked="{Binding InterceptResponse, Mode=TwoWay}" />
+                                                                        </StackPanel>
+                                                                    </Border>
+
+                                                                    <!-- 请求头规则标题 -->
+                                                                    <Border Grid.Row="2"
+                                                                            Padding="8"
+                                                                            Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                                                                            CornerRadius="4"
+                                                                            Margin="0,0,0,8">
+                                                                        <Grid>
+                                                                            <Grid.ColumnDefinitions>
+                                                                                <ColumnDefinition Width="Auto" />
+                                                                                <ColumnDefinition Width="*" />
+                                                                                <ColumnDefinition Width="Auto" />
+                                                                            </Grid.ColumnDefinitions>
+
+                                                                            <TextBlock Grid.Column="0" Text="请求头规则" FontWeight="SemiBold" VerticalAlignment="Center" />
+
+                                                                            <ui:Button Grid.Column="2"
+                                                                                       Content="新增请求头"
+                                                                                       Appearance="Secondary"
+                                                                                       MinWidth="100"
+                                                                                       Click="AddHeader_Click"
+                                                                                       FontWeight="Normal" />
+                                                                        </Grid>
+                                                                    </Border>
+
+                                                                    <!-- 请求头列表 -->
+                                                                    <ui:ListView Grid.Row="3"
+                                                                                 ItemsSource="{Binding Headers}"
+                                                                                 Margin="0,0,0,12"
+                                                                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                                                        <ui:ListView.ItemTemplate>
+                                                                            <DataTemplate>
+                                                                                <Grid Margin="0,4">
+                                                                                    <Grid.ColumnDefinitions>
+                                                                                        <ColumnDefinition Width="*" />
+                                                                                        <ColumnDefinition Width="Auto" />
+                                                                                        <ColumnDefinition Width="*" />
+                                                                                        <ColumnDefinition Width="Auto" />
+                                                                                        <ColumnDefinition Width="Auto" />
+                                                                                    </Grid.ColumnDefinitions>
+
+                                                                                    <ui:TextBox Grid.Column="0"
+                                                                                             Margin="0,0,4,0"
+                                                                                             Text="{Binding Key, Mode=TwoWay}"
+                                                                                             VerticalContentAlignment="Center"
+                                                                                             PlaceholderText="Header名称" />
+
+                                                                                    <CheckBox Grid.Column="1"
+                                                                                              Content="正则"
+                                                                                              Margin="0,0,8,0"
+                                                                                              VerticalAlignment="Center"
+                                                                                              IsChecked="{Binding KeyUseRegex, Mode=TwoWay}" />
+
+                                                                                    <ui:TextBox Grid.Column="2"
+                                                                                                Margin="0,0,4,0"
+                                                                                                Text="{Binding Value, Mode=TwoWay}"
+                                                                                                VerticalContentAlignment="Center"
+                                                                                                PlaceholderText="Header值" />
+
+                                                                                    <CheckBox Grid.Column="3"
+                                                                                              Content="正则"
+                                                                                              Margin="0,0,8,0"
+                                                                                              VerticalAlignment="Center"
+                                                                                              IsChecked="{Binding ValueUseRegex, Mode=TwoWay}" />
+
+                                                                                    <ui:Button Grid.Column="4"
+                                                                                               Content="删除"
+                                                                                               Appearance="Danger"
+                                                                                               MinWidth="60"
+                                                                                               Click="DeleteHeader_Click" />
+                                                                                </Grid>
+                                                                            </DataTemplate>
+                                                                        </ui:ListView.ItemTemplate>
+                                                                    </ui:ListView>
+
+                                                                    <!-- 操作按钮 -->
+                                                                    <StackPanel Grid.Row="4"
+                                                                                Orientation="Horizontal"
+                                                                                HorizontalAlignment="Right"
+                                                                                Margin="0,8,0,0">
+                                                                        <ui:Button Content="删除规则"
+                                                                                   Appearance="Danger"
+                                                                                   MinWidth="80"
+                                                                                   Click="DeleteRule_Click" />
+                                                                    </StackPanel>
+                                                                </Grid>
+                                                            </Expander>
+                                                        </Border>
                                                     </DataTemplate>
                                                 </ui:ListView.ItemTemplate>
                                             </ui:ListView>
-
-                                            <!-- Action Buttons -->
-                                            <StackPanel Grid.Row="4"
-                                                        Orientation="Horizontal"
-                                                        HorizontalAlignment="Right"
-                                                        Margin="0,8,0,0">
-                                                <!-- <ui:Button Content="保存更改" -->
-                                                <!--            Appearance="Primary" -->
-                                                <!--            MinWidth="80" -->
-                                                <!--            Margin="0,0,8,0" -->
-                                                <!--            /> -->
-                                                <ui:Button Content="删除规则"
-                                                           Appearance="Danger"
-                                                           MinWidth="80"
-                                                           Click="DeleteRule_Click"
-                                                           />
-                                            </StackPanel>
-                                        </Grid>
-                                    </Expander>
-                                </Border>
-                            </DataTemplate>
-                        </ui:ListView.ItemTemplate>
-                    </ui:ListView>
+                                        </Expander>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
                 </Grid>
             </Border>
         </Grid>

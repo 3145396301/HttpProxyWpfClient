@@ -7,78 +7,96 @@ namespace net8._0_ProxyWPF.code.Pages.BlockingSetting;
 
 public partial class BlockingSettingControl : UserControl
 {
-    public ObservableCollection<RequestMatchVo> requestMatches { get;} = new ObservableCollection<RequestMatchVo>();
+    public ObservableCollection<RuleGroupVo> groups { get; } = new ObservableCollection<RuleGroupVo>();
+
     public BlockingSettingControl()
     {
         InitializeComponent();
     }
 
-    public BlockingSettingControl(ObservableCollection<RequestMatch> matches)
+    public BlockingSettingControl(ObservableCollection<RuleGroup> ruleGroups)
     {
         InitializeComponent();
-        requestMatches.Clear();
-        foreach (var requestMatch in matches)
+        groups.Clear();
+        foreach (var ruleGroup in ruleGroups)
         {
-            requestMatches.Add(requestMatch.ToRequestMatchVo());
+            groups.Add(RuleGroupVo.FromRuleGroup(ruleGroup));
         }
     }
 
-    private void NewRule_OnClick(object sender, RoutedEventArgs e)
+    private void NewGroup_OnClick(object sender, RoutedEventArgs e)
     {
-        requestMatches.Add(new RequestMatchVo(){Name = NewRuleName.Text});
+        string name = NewGroupName.Text;
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return;
+        }
+
+        groups.Add(new RuleGroupVo { Name = name });
+        NewGroupName.Text = string.Empty;
     }
 
-    private void AddHeader_Click(object sender, RoutedEventArgs e)
+    private void DeleteGroup_Click(object sender, RoutedEventArgs e)
     {
-        Button? button = sender as Button;
-        if (button != null)
+        if (sender is Button { DataContext: RuleGroupVo groupVo })
         {
-            RequestMatchVo requestMatchVo = button.DataContext as RequestMatchVo;
-            if (requestMatchVo != null)
-            {
-                requestMatchVo.AddHeader("","");
-            }
+            groups.Remove(groupVo);
         }
     }
 
-    private void DeleteHeader_Click(object sender, RoutedEventArgs e)
+    private void AddRule_Click(object sender, RoutedEventArgs e)
     {
-        Button? button = sender as Button;
-        if (button != null)
+        if (sender is Button { DataContext: RuleGroupVo groupVo })
         {
-            HeaderVo headerVo = button.DataContext as HeaderVo;
-            if (headerVo != null)
-            {
-                RequestMatchVo requestMatchVo = headerVo.RequestMatchVo;
-                requestMatchVo.RemoveHeader(headerVo);
-            }
+            groupVo.Rules.Add(new RequestMatchVo { Name = "新规则" });
         }
     }
 
     private void DeleteRule_Click(object sender, RoutedEventArgs e)
     {
-        Button? button = sender as Button;
-        if (button != null)
+        if (sender is not Button button || button.DataContext is not RequestMatchVo requestMatchVo)
         {
-            RequestMatchVo requestMatchVo = button.DataContext as RequestMatchVo;
-            if (requestMatchVo != null)
+            return;
+        }
+
+        foreach (var groupVo in groups)
+        {
+            if (groupVo.Rules.Contains(requestMatchVo))
             {
                 requestMatchVo.ClearHeaders();
-                requestMatches.Remove(requestMatchVo);
+                groupVo.Rules.Remove(requestMatchVo);
+                break;
             }
         }
     }
 
-    public void UpdateRequestMatches()
+    private void AddHeader_Click(object sender, RoutedEventArgs e)
     {
-        List<RequestMatch> requests = new List<RequestMatch>();
-        foreach (RequestMatchVo requestMatchVo in requestMatches)
+        if (sender is Button { DataContext: RequestMatchVo requestMatchVo })
         {
-            requests.Add(requestMatchVo.ToRequestMatch());
+            requestMatchVo.AddHeader("", "");
         }
-        Main? page = MainWindow.pages["Main"] as Main;
-        page?.ResetRequestMatches(requests);
     }
 
+    private void DeleteHeader_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { DataContext: HeaderVo headerVo })
+        {
+            headerVo.RequestMatchVo?.RemoveHeader(headerVo);
+        }
+    }
 
+    /// <summary>
+    /// 将当前 UI 编辑的分组/规则回写到 Main 页面并触发持久化保存
+    /// </summary>
+    public void UpdateGroups()
+    {
+        List<RuleGroup> ruleGroups = new List<RuleGroup>();
+        foreach (RuleGroupVo groupVo in groups)
+        {
+            ruleGroups.Add(groupVo.ToRuleGroup());
+        }
+        Main? page = MainWindow.pages["Main"] as Main;
+        page?.ResetGroups(ruleGroups);
+    }
 }
