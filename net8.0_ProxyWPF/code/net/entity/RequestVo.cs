@@ -8,7 +8,7 @@ namespace net8._0_ProxyWPF.code.net.entity
     {
         SessionEventArgs _session;
         private long? _bodySize;
-        private Guid _clientConnectionId;
+        private long _clientConnectionId;
         private Exception _exception;
         private string _host;
         private int _processId;
@@ -26,7 +26,7 @@ namespace net8._0_ProxyWPF.code.net.entity
             get=> _bodySize;
             set=> SetProperty(ref _bodySize, value);
         }
-        public Guid ClientConnectionId
+        public long ClientConnectionId
         {
             get=> _clientConnectionId;
             set=> SetProperty(ref _clientConnectionId, value);
