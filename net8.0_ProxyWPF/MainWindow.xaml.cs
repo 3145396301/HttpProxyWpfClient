@@ -29,6 +29,15 @@ namespace net8._0_ProxyWPF
             InitializeComponent();
             // 加载主页
             RootFrame.Navigate(pages["Main"]);
+            Closing += MainWindow_Closing;
+        }
+
+        private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (pages["Main"] is Main mainPage)
+            {
+                mainPage.ShutdownProxy();
+            }
         }
 
         // 标题栏鼠标按下：单击拖动，双击最大化/还原

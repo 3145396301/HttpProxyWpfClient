@@ -717,5 +717,22 @@ namespace net8._0_ProxyWPF.code.Pages
                 proxyConnect.StopProxy();
             });
         }
+
+        /// <summary>
+        /// 程序退出前调用：同步关闭代理，确保系统代理设置在进程结束前已还原
+        /// </summary>
+        public void ShutdownProxy()
+        {
+            foreach (RequestVo requestVo in Sessions)
+            {
+                lock (requestVo.Session)
+                {
+                    Monitor.PulseAll(requestVo.Session);
+                }
+            }
+
+            proxyConnect.StopSystemProxy();
+            proxyConnect.StopProxy();
+        }
     }
 }
