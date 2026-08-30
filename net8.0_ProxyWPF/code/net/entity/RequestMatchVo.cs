@@ -1,19 +1,55 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using net8._0_ProxyWPF.code.@base;
 
 namespace net8._0_ProxyWPF.code.net.entity;
 
-public class RequestMatchVo :BindableBase
+public class RequestMatchVo : BindableBase
 {
-    private string _naem;
+    private string _name;
+    private bool _enabled = true;
+    private string _domain;
+    private bool _domainUseRegex;
     private string _url;
+    private bool _urlUseRegex;
     private string _method;
+    private bool _interceptRequest;
+    private bool _interceptResponse = true;
     private ObservableCollection<HeaderVo> _headers;
+
+    public string Name
+    {
+        get => _name;
+        set => SetProperty(ref _name, value);
+    }
+
+    public bool Enabled
+    {
+        get => _enabled;
+        set => SetProperty(ref _enabled, value);
+    }
+
+    public string Domain
+    {
+        get => _domain;
+        set => SetProperty(ref _domain, value);
+    }
+
+    public bool DomainUseRegex
+    {
+        get => _domainUseRegex;
+        set => SetProperty(ref _domainUseRegex, value);
+    }
 
     public string Url
     {
         get => _url;
         set => SetProperty(ref _url, value);
+    }
+
+    public bool UrlUseRegex
+    {
+        get => _urlUseRegex;
+        set => SetProperty(ref _urlUseRegex, value);
     }
 
     public string Method
@@ -22,16 +58,22 @@ public class RequestMatchVo :BindableBase
         set => SetProperty(ref _method, value);
     }
 
+    public bool InterceptRequest
+    {
+        get => _interceptRequest;
+        set => SetProperty(ref _interceptRequest, value);
+    }
+
+    public bool InterceptResponse
+    {
+        get => _interceptResponse;
+        set => SetProperty(ref _interceptResponse, value);
+    }
+
     public ObservableCollection<HeaderVo> Headers
     {
         get => _headers;
         set => SetProperty(ref _headers, value);
-    }
-
-    public string Name
-    {
-        get => _naem;
-        set => SetProperty(ref _naem, value);
     }
 
     public RequestMatchVo()
@@ -39,12 +81,14 @@ public class RequestMatchVo :BindableBase
         Headers = new ObservableCollection<HeaderVo>();
     }
 
-    public void AddHeader(string name, string value)
+    public void AddHeader(string key, string value, bool keyUseRegex = false, bool valueUseRegex = false)
     {
         Headers.Add(new HeaderVo()
         {
-            Name = name,
+            Key = key,
             Value = value,
+            KeyUseRegex = keyUseRegex,
+            ValueUseRegex = valueUseRegex,
             RequestMatchVo = this
         });
     }
@@ -66,31 +110,53 @@ public class RequestMatchVo :BindableBase
 
     public RequestMatch ToRequestMatch()
     {
-        var headers = new Dictionary<string, string>();
+        var requestMatch = new RequestMatch
+        {
+            Name = Name,
+            Enabled = Enabled,
+            Domain = Domain,
+            DomainUseRegex = DomainUseRegex,
+            Url = Url,
+            UrlUseRegex = UrlUseRegex,
+            Method = Method,
+            InterceptRequest = InterceptRequest,
+            InterceptResponse = InterceptResponse
+        };
         foreach (var header in Headers)
         {
-            headers.Add(header.Name, header.Value);
+            requestMatch.Headers.Add(new HeaderMatchRule(header.Key, header.Value, header.KeyUseRegex, header.ValueUseRegex));
         }
-        return new RequestMatch(Url, Method, headers){Name = Name};
+        return requestMatch;
     }
-
 }
 
-public class HeaderVo:BindableBase
+public class HeaderVo : BindableBase
 {
-    private string _name;
+    private string _key;
     private string _value;
+    private bool _keyUseRegex;
+    private bool _valueUseRegex;
     private RequestMatchVo _requestMatchVo;
 
-    public string Name
+    public string Key
     {
-        get => _name;
-        set => SetProperty(ref _name, value);
+        get => _key;
+        set => SetProperty(ref _key, value);
     }
     public string Value
     {
         get => _value;
         set => SetProperty(ref _value, value);
+    }
+    public bool KeyUseRegex
+    {
+        get => _keyUseRegex;
+        set => SetProperty(ref _keyUseRegex, value);
+    }
+    public bool ValueUseRegex
+    {
+        get => _valueUseRegex;
+        set => SetProperty(ref _valueUseRegex, value);
     }
 
     public RequestMatchVo RequestMatchVo
@@ -98,5 +164,4 @@ public class HeaderVo:BindableBase
         get => _requestMatchVo;
         set => SetProperty(ref _requestMatchVo, value);
     }
-
 }
