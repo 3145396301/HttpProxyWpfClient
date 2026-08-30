@@ -67,6 +67,13 @@ namespace net8._0_ProxyWPF.code.net
             set => SetProperty(ref _upstreamPass, value);
         }
 
+        private bool _upstreamEnabled = true;
+        public bool UpstreamEnabled
+        {
+            get => _upstreamEnabled;
+            set => SetProperty(ref _upstreamEnabled, value);
+        }
+
         public int ClientConnectionCount
         {
             get => _clientConnectionCount;
@@ -122,7 +129,7 @@ namespace net8._0_ProxyWPF.code.net
             // proxyServer.EnableHttp2 = true;
             _explicitProxyEndPoint = new ExplicitProxyEndPoint(IPAddress.Parse(_proxyHost), _proxyPort);
             proxyServer.AddEndPoint(_explicitProxyEndPoint);
-            if (_upstreamIp != null && _upstreamPort != -1)
+            if (_upstreamEnabled && _upstreamIp != null && _upstreamPort != -1)
             {
                 proxyServer.UpStreamHttpProxy = new ExternalProxy { HostName = _upstreamIp, Port = _upstreamPort , UserName = _upstreamUser, Password = _upstreamPass} ;
                 proxyServer.UpStreamHttpsProxy = new ExternalProxy { HostName = _upstreamIp, Port = _upstreamPort, UserName = _upstreamUser, Password = _upstreamPass };
@@ -207,7 +214,7 @@ namespace net8._0_ProxyWPF.code.net
         }
 
         public void UpdateConfig(string proxyHost = null, int? proxyPort = null, string? upstreamIp = null,
-            int? upstreamPort = null, string upstreamUser = null, string upstreamPass = null)
+            int? upstreamPort = null, string upstreamUser = null, string upstreamPass = null, bool? upstreamEnabled = null)
         {
             if (proxyHost != null)
                 ProxyHost = proxyHost;
@@ -221,6 +228,8 @@ namespace net8._0_ProxyWPF.code.net
                 UpstreamUser = upstreamUser;
             if (upstreamPass != null)
                 UpstreamPass = upstreamPass;
+            if (upstreamEnabled != null)
+                UpstreamEnabled = upstreamEnabled.Value;
             ResetProxy();
         }
 

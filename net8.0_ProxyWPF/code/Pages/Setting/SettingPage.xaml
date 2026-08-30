@@ -80,6 +80,14 @@
                     CornerRadius="8" Padding="16">
                 <Expander Header="上游代理设置" IsExpanded="True">
                     <StackPanel Margin="0,12,0,0">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                            <Label Content="启用上游代理:"
+                                   VerticalAlignment="Center"/>
+                            <ui:ToggleSwitch Name="UpstreamEnabledToggle"
+                                              IsChecked="True"
+                                              VerticalAlignment="Center"
+                                              Margin="8,0,0,0"/>
+                        </StackPanel>
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>

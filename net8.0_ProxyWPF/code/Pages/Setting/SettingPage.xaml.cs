@@ -23,7 +23,7 @@ public partial class SettingPage : Page
         }
 
         Main page = MainWindow.pages["Main"] as  Main;
-        page?.ResetProxy(localIp, localPort, upstreamIp, upstreamPort, null,null);
+        page?.ResetProxy(localIp, localPort, upstreamIp, upstreamPort, null,null, UpstreamEnabledToggle.IsChecked == true);
     }
 
     private void CloseProxyButton_OnClick(object sender, RoutedEventArgs e)
