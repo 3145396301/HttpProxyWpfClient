@@ -7,9 +7,11 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
 using net8._0_ProxyWPF.code.net;
 using net8._0_ProxyWPF.code.net.entity;
+using net8._0_ProxyWPF.code.net.util;
 using net8._0_ProxyWPF.code.Pages.BlockingSetting;
 using net8._0_ProxyWPF.code.Pages.Util;
 using Titanium.Web.Proxy.EventArguments;
@@ -145,6 +147,46 @@ namespace net8._0_ProxyWPF.code.Pages
                     Monitor.Pulse(requestVo.Session);
                 }
             }
+        }
+
+        private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            DependencyObject source = e.OriginalSource as DependencyObject;
+            while (source != null && source is not Wpf.Ui.Controls.ListViewItem)
+            {
+                source = VisualTreeHelper.GetParent(source);
+            }
+
+            if (source is Wpf.Ui.Controls.ListViewItem item)
+            {
+                item.IsSelected = true;
+            }
+        }
+
+        private void CopyCurlCmd_OnClick(object sender, RoutedEventArgs e)
+        {
+            CopyCurl(CurlShellType.Cmd);
+        }
+
+        private void CopyCurlBash_OnClick(object sender, RoutedEventArgs e)
+        {
+            CopyCurl(CurlShellType.Bash);
+        }
+
+        private void CopyCurlPowerShell_OnClick(object sender, RoutedEventArgs e)
+        {
+            CopyCurl(CurlShellType.PowerShell);
+        }
+
+        private void CopyCurl(CurlShellType shellType)
+        {
+            if (SelectedSession == null)
+            {
+                return;
+            }
+
+            string curlCommand = CurlCommandGenerator.Generate(SelectedSession.Session.HttpClient.Request, shellType);
+            Clipboard.SetText(curlCommand);
         }
 
         private void ErrorText_OnClick(object sender, MouseButtonEventArgs e)

@@ -36,7 +36,17 @@
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                          ScrollViewer.CanContentScroll="False"
                          VirtualizingPanel.IsVirtualizing="False"
-                         KeyDown="UIElement_OnKeyDown">
+                         KeyDown="UIElement_OnKeyDown"
+                         PreviewMouseRightButtonDown="SessionList_OnPreviewMouseRightButtonDown">
+                <ui:ListView.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="复制为 curl">
+                            <MenuItem Header="cmd" Click="CopyCurlCmd_OnClick"/>
+                            <MenuItem Header="bash" Click="CopyCurlBash_OnClick"/>
+                            <MenuItem Header="PowerShell" Click="CopyCurlPowerShell_OnClick"/>
+                        </MenuItem>
+                    </ContextMenu>
+                </ui:ListView.ContextMenu>
                 <ui:ListView.View>
                     <ui:GridView>
                         <ui:GridViewColumn Header="阻塞" Width="40">
