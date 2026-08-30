@@ -147,6 +147,27 @@ namespace net8._0_ProxyWPF.code.Pages
             }
         }
 
+        private void ErrorText_OnClick(object sender, MouseButtonEventArgs e)
+        {
+            string errorText = ResponseMessage?.ErrorText;
+            if (string.IsNullOrEmpty(errorText))
+            {
+                return;
+            }
+
+            TextBox textBox = new TextBox
+            {
+                Text = errorText,
+                IsReadOnly = true,
+                TextWrapping = TextWrapping.Wrap,
+                AcceptsReturn = true,
+                BorderThickness = new Thickness(0),
+                Padding = new Thickness(10),
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto
+            };
+            DialogHelper.ShowDialogAsync<bool>("请求未完成", textBox, true, 600D, 400D);
+        }
+
         private void Pass_OnClick(object sender, RoutedEventArgs e)
         {
             string responseText = Response.Text;

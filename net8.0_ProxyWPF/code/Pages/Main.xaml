@@ -117,11 +117,34 @@
                                      FontFamily="Consolas" AcceptsReturn="True" />
                         </ScrollViewer>
 
-                        <!-- 操作按钮 -->
-                        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5">
-                            <ui:Button Click="Pass_OnClick" Margin="0,0,5,0">放行</ui:Button>
-                            <ui:Button Name="ModifyRequestBody" Click="ModifyRequestBody_OnClick">快捷修改请求体</ui:Button>
-                        </StackPanel>
+                        <!-- 操作按钮 + 失败/未完成提示 -->
+                        <Grid Grid.Row="2" Margin="5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <ui:TextBlock Grid.Column="0" Text="{Binding ResponseMessage.ErrorText}"
+                                       Foreground="#FFD72B2B" VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis" Cursor="Hand"
+                                       MouseLeftButtonUp="ErrorText_OnClick">
+                                <ui:TextBlock.Style>
+                                    <Style TargetType="{x:Type ui:TextBlock}">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ResponseMessage.HasError}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ui:TextBlock.Style>
+                            </ui:TextBlock>
+
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                                <ui:Button Click="Pass_OnClick" Margin="0,0,5,0">放行</ui:Button>
+                                <ui:Button Name="ModifyRequestBody" Click="ModifyRequestBody_OnClick">快捷修改请求体</ui:Button>
+                            </StackPanel>
+                        </Grid>
                     </Grid>
                 </Border>
             </Grid>
