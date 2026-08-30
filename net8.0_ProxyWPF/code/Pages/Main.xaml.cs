@@ -24,7 +24,25 @@ namespace net8._0_ProxyWPF.code.Pages
         private ProxyConnect proxyConnect;
         public ObservableCollection<RequestVo> Sessions { get; } = new ObservableCollection<RequestVo>();
         private RequestVo _selectedSession;
-        public ObservableCollection<RequestMatch> RequestMatches { get; } = new ObservableCollection<RequestMatch>();
+        public ObservableCollection<RuleGroup> Groups { get; } = new ObservableCollection<RuleGroup>();
+
+        /// <summary>
+        /// 按分组启用状态展平出参与匹配的规则（分组未启用时其下规则整体跳过）
+        /// </summary>
+        private IEnumerable<RequestMatch> EnabledRequestMatches
+        {
+            get
+            {
+                foreach (var group in Groups)
+                {
+                    if (!group.Enabled) continue;
+                    foreach (var rule in group.Rules)
+                    {
+                        yield return rule;
+                    }
+                }
+            }
+        }
 
         public RequestVo SelectedSession
         {
@@ -64,11 +82,20 @@ namespace net8._0_ProxyWPF.code.Pages
         {
             InitializeComponent();
 
+            AppConfig config = ConfigService.Load();
+            LoadConfig(config);
+
             proxyConnect = new ProxyConnect()
-                { ProxyHost = "0.0.0.0", ProxyPort = 8000, UpstreamIp = "127.0.0.1", UpstreamPort = 10808 };
+            {
+                ProxyHost = config.LocalProxyHost,
+                ProxyPort = config.LocalProxyPort,
+                UpstreamIp = config.UpstreamHost,
+                UpstreamPort = config.UpstreamPort ?? -1,
+                UpstreamUser = config.UpstreamUser,
+                UpstreamPass = config.UpstreamPass,
+                UpstreamEnabled = config.UpstreamEnabled
+            };
 
-
-            // { ProxyHost = "0.0.0.0", ProxyPort = 8000};
             proxyConnect.AddBeforeRequestTask("URL 打印", 1, session =>
             {
                 this.Dispatcher.Invoke(() => { this.Sessions.Add(new RequestVo(session)); });
@@ -77,13 +104,34 @@ namespace net8._0_ProxyWPF.code.Pages
                 return true;
             });
 
+            proxyConnect.AddBeforeRequestTask("请求拦截", 2, session =>
+            {
+                Request httpClientRequest = session.HttpClient.Request;
+                foreach (RequestMatch requestMatch in EnabledRequestMatches)
+                {
+                    if (requestMatch.InterceptRequest && RequestMatch.MatchingRules(httpClientRequest, requestMatch))
+                    {
+                        lock (session)
+                        {
+                            RequestVo requestVo = this.Sessions.FirstOrDefault(x => x.Session == session);
+                            this.Dispatcher.Invoke(() => { requestVo.BlockingRequest = true; });
+                            Monitor.Wait(session);
+                            this.Dispatcher.Invoke(() => { requestVo.BlockingRequest = false; });
+                            break;
+                        }
+                    }
+                }
+
+                return true;
+            });
+
             proxyConnect.AddBeforeResponseTask("响应拦截", 1, session =>
             {
                 Request httpClientRequest = session.HttpClient.Request;
                 Response httpClientResponse = session.HttpClient.Response;
-                foreach (RequestMatch requestMatch in RequestMatches)
+                foreach (RequestMatch requestMatch in EnabledRequestMatches)
                 {
-                    if (RequestMatch.MatchingRules(httpClientRequest, requestMatch))
+                    if (requestMatch.InterceptResponse && RequestMatch.MatchingRules(httpClientRequest, requestMatch))
                     {
                         lock (session)
                         {
@@ -104,6 +152,37 @@ namespace net8._0_ProxyWPF.code.Pages
             proxyConnect.CreateProxyServer();
             proxyConnect.StartProxy();
             proxyConnect.SettingSystemProxy();
+        }
+
+        /// <summary>
+        /// 将读取到的配置应用到界面绑定的分组集合
+        /// </summary>
+        private void LoadConfig(AppConfig config)
+        {
+            Groups.Clear();
+            foreach (var group in config.Groups)
+            {
+                Groups.Add(group);
+            }
+        }
+
+        /// <summary>
+        /// 将当前本地/上游代理设置与拦截规则保存到本地配置文件
+        /// </summary>
+        public void SaveConfig()
+        {
+            var config = new AppConfig
+            {
+                LocalProxyHost = proxyConnect.ProxyHost,
+                LocalProxyPort = proxyConnect.ProxyPort,
+                UpstreamEnabled = proxyConnect.UpstreamEnabled,
+                UpstreamHost = proxyConnect.UpstreamIp,
+                UpstreamPort = proxyConnect.UpstreamPort == -1 ? null : proxyConnect.UpstreamPort,
+                UpstreamUser = proxyConnect.UpstreamUser,
+                UpstreamPass = proxyConnect.UpstreamPass,
+                Groups = Groups.ToList()
+            };
+            ConfigService.Save(config);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -129,11 +208,11 @@ namespace net8._0_ProxyWPF.code.Pages
 
         private void block_OnClick(object sender, RoutedEventArgs e)
         {
-            // RequestMatches.Add(new RequestMatch() { All = true });
-            BlockingSettingControl blockingSettingControl = new BlockingSettingControl(RequestMatches);
+            BlockingSettingControl blockingSettingControl = new BlockingSettingControl(Groups);
             DialogHelper.ShowDialogAsync<bool>("添加拦截规则",blockingSettingControl,true,900D,600D,onClose: w =>
             {
-                blockingSettingControl.UpdateRequestMatches();
+                blockingSettingControl.UpdateGroups();
+                SaveConfig();
                 Console.WriteLine("拦截规则保存成功");
             });
         }
@@ -144,12 +223,39 @@ namespace net8._0_ProxyWPF.code.Pages
             {
                 lock (requestVo.Session)
                 {
-                    Monitor.Pulse(requestVo.Session);
+                    Monitor.PulseAll(requestVo.Session);
                 }
             }
         }
 
-        private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        /// <summary>
+        /// 上行（请求阶段）拦截放行：将编辑后的请求内容解析回真实 Request 对象后放行
+        /// </summary>
+        private void PassRequest_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (SelectedSession == null)
+            {
+                return;
+            }
+
+            Request request = SelectedSession.Session.HttpClient.Request;
+            try
+            {
+                ParseHttpRequestText(RequestMessage?.AllMessage, request);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("解析请求出错: " + ex);
+            }
+            finally
+            {
+                lock (SelectedSession.Session)
+                {
+                    Monitor.Pulse(SelectedSession.Session);
+                }
+            }
+        }
+private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
             DependencyObject source = e.OriginalSource as DependencyObject;
             while (source != null && source is not Wpf.Ui.Controls.ListViewItem)
@@ -485,6 +591,140 @@ namespace net8._0_ProxyWPF.code.Pages
             // 本方法结束
         }
 
+        /// <summary>
+        /// 将编辑框中的原始请求文本解析回 Request 对象（首行 METHOD URL HTTP/x.x，随后 headers，空行后为 body）
+        /// </summary>
+        private void ParseHttpRequestText(string requestText, Request request)
+        {
+            if (requestText == null) requestText = string.Empty;
+
+            int headerBodySep = requestText.IndexOf("\r\n\r\n", StringComparison.Ordinal);
+            string sepToken = "\r\n\r\n";
+            if (headerBodySep == -1)
+            {
+                headerBodySep = requestText.IndexOf("\n\n", StringComparison.Ordinal);
+                sepToken = "\n\n";
+            }
+
+            int firstLineEnd = requestText.IndexOf("\r\n", StringComparison.Ordinal);
+            int firstLineNewlineLen = 2;
+            if (firstLineEnd == -1)
+            {
+                firstLineEnd = requestText.IndexOf("\n", StringComparison.Ordinal);
+                firstLineNewlineLen = 1;
+            }
+
+            if (firstLineEnd == -1)
+            {
+                firstLineEnd = Math.Min(requestText.Length, headerBodySep >= 0 ? headerBodySep : requestText.Length);
+                firstLineNewlineLen = 0;
+            }
+
+            string requestLine = requestText.Substring(0, Math.Min(requestText.Length, firstLineEnd));
+
+            if (!string.IsNullOrWhiteSpace(requestLine))
+            {
+                var parts = requestLine.Split(new[] { ' ' }, 3, StringSplitOptions.RemoveEmptyEntries);
+                try
+                {
+                    if (parts.Length >= 1)
+                    {
+                        request.Method = parts[0];
+                    }
+
+                    if (parts.Length >= 2)
+                    {
+                        string url = parts[1];
+                        if (Uri.TryCreate(url, UriKind.Absolute, out Uri absoluteUri))
+                        {
+                            request.RequestUri = absoluteUri;
+                        }
+                        else if (Uri.TryCreate(request.RequestUri, url, out Uri combinedUri))
+                        {
+                            request.RequestUri = combinedUri;
+                        }
+                    }
+                }
+                catch
+                {
+                    // 忽略解析错误，保持已有 request 字段
+                }
+            }
+
+            string headersText = string.Empty;
+            string bodyText = string.Empty;
+            if (headerBodySep >= 0)
+            {
+                int headersStart = firstLineEnd + firstLineNewlineLen;
+                headersText = headersStart < headerBodySep
+                    ? requestText.Substring(headersStart, headerBodySep - headersStart)
+                    : string.Empty;
+
+                int bodyStart = headerBodySep + sepToken.Length;
+                bodyText = bodyStart < requestText.Length ? requestText.Substring(bodyStart) : string.Empty;
+            }
+            else if (firstLineEnd < requestText.Length)
+            {
+                int restStart = firstLineEnd + firstLineNewlineLen;
+                if (restStart < requestText.Length)
+                {
+                    string rest = requestText.Substring(restStart);
+                    if (rest.Contains(":"))
+                    {
+                        headersText = rest;
+                    }
+                    else
+                    {
+                        bodyText = rest;
+                    }
+                }
+            }
+
+            if (!string.IsNullOrEmpty(headersText))
+            {
+                try
+                {
+                    var clearMethod = request.Headers.GetType().GetMethod("Clear");
+                    clearMethod?.Invoke(request.Headers, null);
+                }
+                catch
+                {
+                    /* 忽略 */
+                }
+
+                string[] headerLines =
+                    headersText.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (var line in headerLines)
+                {
+                    int colonIndex = line.IndexOf(':');
+                    if (colonIndex > 0)
+                    {
+                        string key = line.Substring(0, colonIndex).Trim();
+                        string value = line.Substring(colonIndex + 1).Trim();
+                        try
+                        {
+                            request.Headers.AddHeader(key, value);
+                        }
+                        catch
+                        {
+                            // 容忍单条 header 添加失败，不影响其余解析
+                        }
+                    }
+                }
+            }
+
+            if (request.HasBody || !string.IsNullOrEmpty(bodyText))
+            {
+                try
+                {
+                    SelectedSession.Session.SetRequestBodyString(bodyText);
+                }
+                catch
+                {
+                    // 如果 SetRequestBodyString 失败，不要抛出到上层
+                }
+            }
+        }
         // 小助手：从 headers 集合读取 header 值（尝试多种可能的接口）
         private string GetHeaderValue(object headersObj, string headerName)
         {
@@ -645,6 +885,8 @@ namespace net8._0_ProxyWPF.code.Pages
             proxyConnect.UpstreamPass = upstreamPass;
             proxyConnect.UpstreamEnabled = upstreamEnabled;
 
+            SaveConfig();
+
             // 释放所有还卡在 Monitor.Wait 的会话，避免 ResetProxy 内部 Stop() 时死锁
             foreach (RequestVo requestVo in Sessions)
             {
@@ -663,16 +905,18 @@ namespace net8._0_ProxyWPF.code.Pages
             });
         }
 
-        public void ResetRequestMatches(List<RequestMatch> requestMatches)
+        /// <summary>
+        /// 由 BlockingSettingControl 在规则分组编辑完成后回写，替换当前生效的分组集合
+        /// </summary>
+        public void ResetGroups(List<RuleGroup> groups)
         {
-            RequestMatches.Clear();
-            foreach (var requestMatch in requestMatches)
+            Groups.Clear();
+            foreach (var group in groups)
             {
-                RequestMatches.Add(requestMatch);
+                Groups.Add(group);
             }
         }
-
-        private void UIElement_OnKeyDown(object sender, KeyEventArgs e)
+private void UIElement_OnKeyDown(object sender, KeyEventArgs e)
         {
             ListView? listView = sender as ListView;
             IList listViewSelectedItems = listView.SelectedItems;

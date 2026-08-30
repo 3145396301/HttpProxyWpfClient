@@ -83,6 +83,11 @@ namespace net8._0_ProxyWPF.code.net.entity
 
             }
 
+            if (Error == null && resp.StatusCode == 0)
+            {
+                Error = new Exception("代理未收到有效响应，连接可能在建立或传输过程中被中断（例如证书验证失败、连接被重置或超时）。");
+            }
+
         }
     }
 }

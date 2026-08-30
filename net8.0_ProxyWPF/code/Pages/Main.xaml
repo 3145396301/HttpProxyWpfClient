@@ -49,7 +49,25 @@
                 </ui:ListView.ContextMenu>
                 <ui:ListView.View>
                     <ui:GridView>
-                        <ui:GridViewColumn Header="阻塞" Width="40">
+                        <ui:GridViewColumn Header="上行" Width="40">
+                            <ui:GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Ellipse Width="12" Height="12" HorizontalAlignment="Center" VerticalAlignment="Center" Fill="Orange">
+                                        <Ellipse.Style>
+                                            <Style TargetType="Ellipse">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding BlockingRequest}" Value="True">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Ellipse.Style>
+                                    </Ellipse>
+                                </DataTemplate>
+                            </ui:GridViewColumn.CellTemplate>
+                        </ui:GridViewColumn>
+                        <ui:GridViewColumn Header="下行" Width="40">
                             <ui:GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Ellipse Width="12" Height="12" HorizontalAlignment="Center" VerticalAlignment="Center" Fill="Red">
@@ -67,7 +85,7 @@
                                 </DataTemplate>
                             </ui:GridViewColumn.CellTemplate>
                         </ui:GridViewColumn>
-                        <ui:GridViewColumn Header="{loc:Loc Host}" DisplayMemberBinding="{Binding Host}" Width="120" />
+<ui:GridViewColumn Header="{loc:Loc Host}" DisplayMemberBinding="{Binding Host}" Width="120" />
                         <ui:GridViewColumn Header="{loc:Loc Protocol}" DisplayMemberBinding="{Binding Protocol}" Width="70" />
                         <ui:GridViewColumn Header="{loc:Loc Method}" DisplayMemberBinding="{Binding Method}" Width="70" />
                         <ui:GridViewColumn Header="{loc:Loc Path}" DisplayMemberBinding="{Binding Url}" Width="200" />
@@ -93,6 +111,7 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
                         <ui:TextBlock Text="请求内容" Margin="5,2" FontWeight="SemiBold" Foreground="White"/>
@@ -102,10 +121,13 @@
                                      Text="{Binding RequestMessage.AllMessage}" TextWrapping="NoWrap"
                                      FontFamily="Consolas" AcceptsReturn="True" />
                         </ScrollViewer>
+
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5">
+                            <ui:Button Click="PassRequest_OnClick">放行</ui:Button>
+                        </StackPanel>
                     </Grid>
                 </Border>
-
-                <!-- 垂直分割线 -->
+<!-- 垂直分割线 -->
                 <GridSplitter Grid.Row="1" Height="5" HorizontalAlignment="Stretch"
                               Background="Transparent" Cursor="SizeNS" />
 

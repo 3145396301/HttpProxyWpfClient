@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using net8._0_ProxyWPF.code.@base;
 using Titanium.Web.Proxy.EventArguments;
 
@@ -20,6 +20,7 @@ namespace net8._0_ProxyWPF.code.net.entity
         private string _url;
         private string _method;
         private bool _blocking;
+        private bool _blockingRequest;
 
         public long? BodySize
         {
@@ -90,6 +91,15 @@ namespace net8._0_ProxyWPF.code.net.entity
         {
             get=> _blocking;
             set=> SetProperty(ref _blocking, value);
+        }
+
+        /// <summary>
+        /// 是否处于请求阶段（上行）拦截暂停中
+        /// </summary>
+        public bool BlockingRequest
+        {
+            get=> _blockingRequest;
+            set=> SetProperty(ref _blockingRequest, value);
         }
 
 
