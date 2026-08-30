@@ -572,7 +572,7 @@ namespace net8._0_ProxyWPF.code.Pages
         }
 
         public void ResetProxy(string proxyHost = null, int? proxyPort = null, string? upstreamIp = null,
-        int? upstreamPort = null, string upstreamUser = null, string upstreamPass = null)
+        int? upstreamPort = null, string upstreamUser = null, string upstreamPass = null, bool upstreamEnabled = true)
         {
             proxyConnect.ProxyHost = proxyHost;
             if (proxyPort != null) proxyConnect.ProxyPort = proxyPort.Value;
@@ -580,9 +580,24 @@ namespace net8._0_ProxyWPF.code.Pages
             if (upstreamPort != null) proxyConnect.UpstreamPort = upstreamPort.Value;
             proxyConnect.UpstreamUser = upstreamUser;
             proxyConnect.UpstreamPass = upstreamPass;
-            proxyConnect.ResetProxy();
-            proxyConnect.StartProxy();
-            proxyConnect.SettingSystemProxy();
+            proxyConnect.UpstreamEnabled = upstreamEnabled;
+
+            // 释放所有还卡在 Monitor.Wait 的会话，避免 ResetProxy 内部 Stop() 时死锁
+            foreach (RequestVo requestVo in Sessions)
+            {
+                lock (requestVo.Session)
+                {
+                    Monitor.PulseAll(requestVo.Session);
+                }
+            }
+
+            // ResetProxy/StartProxy 内部会阻塞等待旧连接关闭，放到后台线程执行，避免卡死 UI
+            System.Threading.Tasks.Task.Run(() =>
+            {
+                proxyConnect.ResetProxy();
+                proxyConnect.StartProxy();
+                proxyConnect.SettingSystemProxy();
+            });
         }
 
         public void ResetRequestMatches(List<RequestMatch> requestMatches)
@@ -623,8 +638,21 @@ namespace net8._0_ProxyWPF.code.Pages
 
         public void StopProxy()
         {
-            proxyConnect.StopSystemProxy();
-            proxyConnect.StopProxy();
+            // 释放所有还卡在 Monitor.Wait 的会话，避免 Stop() 时死锁
+            foreach (RequestVo requestVo in Sessions)
+            {
+                lock (requestVo.Session)
+                {
+                    Monitor.PulseAll(requestVo.Session);
+                }
+            }
+
+            // Stop() 本身是阻塞调用，放到后台线程执行，避免卡死 UI
+            System.Threading.Tasks.Task.Run(() =>
+            {
+                proxyConnect.StopSystemProxy();
+                proxyConnect.StopProxy();
+            });
         }
     }
 }
