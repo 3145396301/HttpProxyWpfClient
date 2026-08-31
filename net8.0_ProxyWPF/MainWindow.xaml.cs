@@ -24,6 +24,8 @@ namespace net8._0_ProxyWPF
             };
 
 
+        private bool _shutdownCompleted;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -32,12 +34,29 @@ namespace net8._0_ProxyWPF
             Closing += MainWindow_Closing;
         }
 
-        private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private async void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            if (_shutdownCompleted)
+            {
+                // 已完成关闭前的清理，本次是我们自己触发的真正关闭，直接放行
+                return;
+            }
+
+            // ShutdownProxy 内部会调用 Titanium 的阻塞 Stop()，而该调用需要等待仍卡在
+            // Monitor.Wait 的会话处理线程通过 Dispatcher.Invoke 回到 UI 线程更新界面。
+            // 若在此处同步调用，UI 线程会一直停留在本方法内，无法处理那些 Dispatcher.Invoke，
+            // 从而与后台线程互相等待形成死锁，导致关闭窗口时 UI 卡死。
+            // 因此先取消本次关闭，把清理工作放到后台线程执行，UI 线程保持消息循环畅通，
+            // 待清理完成后再真正关闭窗口。
+            e.Cancel = true;
+
             if (pages["Main"] is Main mainPage)
             {
-                mainPage.ShutdownProxy();
+                await System.Threading.Tasks.Task.Run(() => mainPage.ShutdownProxy());
             }
+
+            _shutdownCompleted = true;
+            Close();
         }
 
         // 标题栏鼠标按下：单击拖动，双击最大化/还原
