@@ -17,7 +17,22 @@
     <Grid Margin="5">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition>
+                <ColumnDefinition.Style>
+                    <Style TargetType="ColumnDefinition">
+                        <Setter Property="Width" Value="320"/>
+                        <Setter Property="MinWidth" Value="200"/>
+                        <Setter Property="MaxWidth" Value="800"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsSearchPanelOpen}" Value="False">
+                                <Setter Property="Width" Value="0"/>
+                                <Setter Property="MinWidth" Value="0"/>
+                                <Setter Property="MaxWidth" Value="0"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ColumnDefinition.Style>
+            </ColumnDefinition>
         </Grid.ColumnDefinitions>
 
         <Grid Grid.Column="0">
@@ -217,12 +232,12 @@
         </Grid>
 
         <!-- 分割线：搜索侧边栏 -->
-        <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Left"
-                      Background="Transparent" Cursor="SizeWE"
+        <GridSplitter Grid.Column="1" Width="1" HorizontalAlignment="Left"
+                      Background="White" Cursor="SizeWE"
                       Visibility="{Binding IsSearchPanelOpen, Converter={StaticResource BoolToVisibility}}"/>
 
         <!-- 搜索侧边栏 -->
-        <Border Grid.Column="1" Width="320"  Margin="5,0,0,0"
+        <Border Grid.Column="1" Margin="5,0,0,0"
                 CornerRadius="3" BorderThickness="1"
                 BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
                 Visibility="{Binding IsSearchPanelOpen, Converter={StaticResource BoolToVisibility}}">
