@@ -22,6 +22,11 @@ namespace net8._0_ProxyWPF.code.Pages
     public partial class Main : Page, INotifyPropertyChanged
     {
         private ProxyConnect proxyConnect;
+
+        /// <summary>
+        /// 供设置页读取当前生效的代理配置，用于打开设置页时回填输入框
+        /// </summary>
+        public ProxyConnect ProxyConnect => proxyConnect;
         public ObservableCollection<RequestVo> Sessions { get; } = new ObservableCollection<RequestVo>();
         private RequestVo _selectedSession;
         public ObservableCollection<RuleGroup> Groups { get; } = new ObservableCollection<RuleGroup>();

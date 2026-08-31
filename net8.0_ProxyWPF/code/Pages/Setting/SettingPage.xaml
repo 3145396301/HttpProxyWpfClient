@@ -6,7 +6,8 @@
       xmlns:local="clr-namespace:net8._0_ProxyWPF.code.Pages.Setting"
       xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
       mc:Ignorable="d"
-      Title="代理设置">
+      Title="代理设置"
+      Loaded="SettingPage_OnLoaded">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="20">
