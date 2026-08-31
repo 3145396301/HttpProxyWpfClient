@@ -61,6 +61,21 @@ namespace net8._0_ProxyWPF.code.Pages
             }
         }
 
+        /// <summary>
+        /// 若给定 session 正是当前选中会话，则用最新数据重建请求/响应展示对象，用于拦截放行、响应完成后的界面刷新
+        /// </summary>
+        private void RefreshMessagesIfSelected(SessionEventArgs session)
+        {
+            this.Dispatcher.Invoke(() =>
+            {
+                if (SelectedSession != null && SelectedSession.Session == session)
+                {
+                    this.RequestMessage = new RequestMessage(session);
+                    this.ResponseMessage = new ResponseMessage(session);
+                }
+            });
+        }
+
         private RequestMessage _requestMessage;
         private ResponseMessage _responseMessage;
 
@@ -117,11 +132,20 @@ namespace net8._0_ProxyWPF.code.Pages
                             this.Dispatcher.Invoke(() => { requestVo.BlockingRequest = true; });
                             Monitor.Wait(session);
                             this.Dispatcher.Invoke(() => { requestVo.BlockingRequest = false; });
+                            RefreshMessagesIfSelected(session);
                             break;
                         }
                     }
                 }
 
+                return true;
+            });
+
+            proxyConnect.AddBeforeResponseTask("刷新详情界面", 0, session =>
+            {
+                // 此时响应体已通过 GetResponseBody 完整读取并保留（KeepBody=true），是刷新界面最安全可靠的时机；
+                // AfterResponse 阶段响应体可能已发送给客户端并被释放，不适合在此读取
+                RefreshMessagesIfSelected(session);
                 return true;
             });
 
@@ -141,11 +165,18 @@ namespace net8._0_ProxyWPF.code.Pages
                             // ProxyConnect.SemaphoreDict[session].Semaphore.Wait();
                             Monitor.Wait(session);
                             this.Dispatcher.Invoke(() => { requestVo.Blocking = false; });
+                            RefreshMessagesIfSelected(session);
                             return true;
                         }
                     }
                 }
 
+                return true;
+            });
+
+            proxyConnect.AddAfterResponseTask("刷新详情界面", 1, session =>
+            {
+                RefreshMessagesIfSelected(session);
                 return true;
             });
 
@@ -241,7 +272,11 @@ namespace net8._0_ProxyWPF.code.Pages
             Request request = SelectedSession.Session.HttpClient.Request;
             try
             {
-                ParseHttpRequestText(RequestMessage?.AllMessage, request);
+                // 内容过大截断展示时编辑框为只读，此时用户只能通过"编辑完整请求体"弹窗修改 ReqBody，主编辑框内容与 AllMessage 始终一致
+                string textToParse = RequestMessage != null && RequestMessage.IsTruncated
+                    ? RequestMessage.AllMessage
+                    : this.Request.Text;
+                ParseHttpRequestText(textToParse, request);
             }
             catch (Exception ex)
             {
@@ -318,11 +353,14 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
 
         private void Pass_OnClick(object sender, RoutedEventArgs e)
         {
-            string responseText = Response.Text;
             if (SelectedSession==null)
             {
                 return;
             }
+            // 内容过大截断展示时编辑框为只读，此时用户只能通过"编辑完整响应体"弹窗修改 RespBody，主编辑框内容与 AllMessage 始终一致
+            string responseText = ResponseMessage != null && ResponseMessage.IsTruncated
+                ? ResponseMessage.AllMessage
+                : Response.Text;
             Response response = SelectedSession.Session.HttpClient.Response;
 
             try
@@ -807,16 +845,54 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
 
         private void ModifyRequestBody_OnClick(object sender, RoutedEventArgs e)
         {
-            // 弹出一个文本框窗口 ， 获取输入的文本
+            string? result = ShowBodyEditDialog("输入请求体", "");
+            if (result != null)
+            {
+                ResponseMessage.RespBody = result;
+            }
+        }
 
+        /// <summary>
+        /// 请求体过大被截断展示时，弹窗编辑完整请求体（避免在主编辑框里渲染超大文本导致卡顿）
+        /// </summary>
+        private void EditRequestBody_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (RequestMessage == null) return;
+
+            string? result = ShowBodyEditDialog("编辑完整请求体", RequestMessage.ReqBody ?? "");
+            if (result != null)
+            {
+                RequestMessage.ReqBody = result;
+            }
+        }
+
+        /// <summary>
+        /// 响应体过大被截断展示时，弹窗编辑完整响应体（避免在主编辑框里渲染超大文本导致卡顿）
+        /// </summary>
+        private void EditResponseBody_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (ResponseMessage == null) return;
+
+            string? result = ShowBodyEditDialog("编辑完整响应体", ResponseMessage.RespBody ?? "");
+            if (result != null)
+            {
+                ResponseMessage.RespBody = result;
+            }
+        }
+
+        /// <summary>
+        /// 弹出一个大文本框窗口用于编辑完整 body，确定返回编辑后的文本，取消返回 null
+        /// </summary>
+        private string? ShowBodyEditDialog(string title, string initialText)
+        {
             Window dialog = new Window
             {
-                Title = "输入请求体",
-                Width = 400,
-                Height = 200,
+                Title = title,
+                Width = 700,
+                Height = 500,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 Owner = Window.GetWindow(this), // 当前窗口作为父窗口
-                ResizeMode = ResizeMode.NoResize
+                ResizeMode = ResizeMode.CanResize
             };
 
             // 布局
@@ -827,12 +903,19 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
             // 输入框
             TextBox textBox = new TextBox
             {
+                Text = initialText,
                 AcceptsReturn = true,
-                TextWrapping = TextWrapping.Wrap,
-                VerticalScrollBarVisibility = ScrollBarVisibility.Auto
+                TextWrapping = TextWrapping.NoWrap,
+                FontFamily = new FontFamily("Consolas")
             };
-            Grid.SetRow(textBox, 0);
-            grid.Children.Add(textBox);
+            ScrollViewer scrollViewer = new ScrollViewer
+            {
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                Content = textBox
+            };
+            Grid.SetRow(scrollViewer, 0);
+            grid.Children.Add(scrollViewer);
 
             // 按钮区
             StackPanel panel = new StackPanel
@@ -865,13 +948,7 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
                 dialog.Close();
             };
 
-            // 显示对话框并取结果
-            if (dialog.ShowDialog() == true)
-            {
-                string input = textBox.Text;
-
-                ResponseMessage.RespBody = input;
-            }
+            return dialog.ShowDialog() == true ? textBox.Text : null;
         }
 
         public void ResetProxy(string proxyHost = null, int? proxyPort = null, string? upstreamIp = null,

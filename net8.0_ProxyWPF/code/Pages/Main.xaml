@@ -9,6 +9,10 @@
       Title="Main"
       DataContext="{Binding RelativeSource={RelativeSource Self}}">
 
+    <Page.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    </Page.Resources>
+
     <Grid Margin="5">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -118,11 +122,14 @@
 
                         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
                             <ui:TextBox Name="Request" BorderThickness="0" Background="Transparent"
-                                     Text="{Binding RequestMessage.AllMessage}" TextWrapping="NoWrap"
+                                     Text="{Binding RequestMessage.DisplayMessage, Mode=OneWay}" TextWrapping="NoWrap"
+                                     IsReadOnly="{Binding RequestMessage.IsTruncated}"
                                      FontFamily="Consolas" AcceptsReturn="True" />
                         </ScrollViewer>
 
                         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5">
+                            <ui:Button Click="EditRequestBody_OnClick" Margin="0,0,5,0"
+                                       Visibility="{Binding RequestMessage.IsTruncated, Converter={StaticResource BoolToVisibility}}">编辑完整请求体</ui:Button>
                             <ui:Button Click="PassRequest_OnClick">放行</ui:Button>
                         </StackPanel>
                     </Grid>
@@ -145,7 +152,8 @@
 
                         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
                             <ui:TextBox Name="Response" BorderThickness="0" Background="Transparent"
-                                     Text="{Binding ResponseMessage.AllMessage}" TextWrapping="NoWrap"
+                                     Text="{Binding ResponseMessage.DisplayMessage, Mode=OneWay}" TextWrapping="NoWrap"
+                                     IsReadOnly="{Binding ResponseMessage.IsTruncated}"
                                      FontFamily="Consolas" AcceptsReturn="True" />
                         </ScrollViewer>
 
@@ -174,6 +182,8 @@
 
                             <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
                                 <ui:Button Click="Pass_OnClick" Margin="0,0,5,0">放行</ui:Button>
+                                <ui:Button Click="EditResponseBody_OnClick" Margin="0,0,5,0"
+                                           Visibility="{Binding ResponseMessage.IsTruncated, Converter={StaticResource BoolToVisibility}}">编辑完整响应体</ui:Button>
                                 <ui:Button Name="ModifyRequestBody" Click="ModifyRequestBody_OnClick">快捷修改请求体</ui:Button>
                             </StackPanel>
                         </Grid>
