@@ -6,6 +6,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -22,14 +23,251 @@ namespace net8._0_ProxyWPF.code.Pages
     public partial class Main : Page, INotifyPropertyChanged
     {
         private ProxyConnect proxyConnect;
+        private readonly SearchHighlightRenderer _highlightRenderer = new();
 
         /// <summary>
         /// 供设置页读取当前生效的代理配置，用于打开设置页时回填输入框
         /// </summary>
         public ProxyConnect ProxyConnect => proxyConnect;
         public ObservableCollection<RequestVo> Sessions { get; } = new ObservableCollection<RequestVo>();
+        private readonly ICollectionView _sessionsView;
         private RequestVo _selectedSession;
         public ObservableCollection<RuleGroup> Groups { get; } = new ObservableCollection<RuleGroup>();
+
+        /// <summary>
+        /// 尚未确定是否命中拦截规则、暂缓加入 Sessions 的会话（配合"直接丢弃非拦截请求"子开关使用）。
+        /// 在 BeforeResponse 阶段完成最终判定后：命中拦截则补加入列表，否则连同其消息一起被丢弃（正常转发但不渲染）。
+        /// </summary>
+        private readonly Dictionary<SessionEventArgs, RequestVo> _pendingSessions = new();
+        private readonly object _pendingSessionsLock = new();
+
+        private bool _onlyShowIntercepted;
+        /// <summary>
+        /// 主开关：只展示拦截请求。开启后过滤视图仅显示 Intercepted=true 的会话；
+        /// 关闭后立即恢复显示全部已收集的会话（软过滤，不影响底层 Sessions 集合内容）
+        /// </summary>
+        public bool OnlyShowIntercepted
+        {
+            get => _onlyShowIntercepted;
+            set
+            {
+                if (SetField(ref _onlyShowIntercepted, value))
+                {
+                    _sessionsView.Refresh();
+                }
+            }
+        }
+
+        private bool _discardNonIntercepted;
+        /// <summary>
+        /// 子开关：直接丢弃非拦截请求。开启后，非拦截会话不会被加入 Sessions（正常转发但不渲染），
+        /// 关闭后不会找回之前已丢弃的会话。仅在 OnlyShowIntercepted 开启时生效。
+        /// </summary>
+        public bool DiscardNonIntercepted
+        {
+            get => _discardNonIntercepted;
+            set => SetField(ref _discardNonIntercepted, value);
+        }
+
+        #region 搜索
+
+        private bool _isSearchPanelOpen;
+        public bool IsSearchPanelOpen
+        {
+            get => _isSearchPanelOpen;
+            set => SetField(ref _isSearchPanelOpen, value);
+        }
+
+        private string _searchKeyword = "";
+        public string SearchKeyword
+        {
+            get => _searchKeyword;
+            set
+            {
+                if (SetField(ref _searchKeyword, value))
+                {
+                    RunSearch();
+                }
+            }
+        }
+
+        private bool _searchUseRegex;
+        public bool SearchUseRegex
+        {
+            get => _searchUseRegex;
+            set
+            {
+                if (SetField(ref _searchUseRegex, value))
+                {
+                    RunSearch();
+                }
+            }
+        }
+
+        private bool _searchFieldHost = true;
+        public bool SearchFieldHost { get => _searchFieldHost; set { if (SetField(ref _searchFieldHost, value)) RunSearch(); } }
+
+        private bool _searchFieldUrl = true;
+        public bool SearchFieldUrl { get => _searchFieldUrl; set { if (SetField(ref _searchFieldUrl, value)) RunSearch(); } }
+
+        private bool _searchFieldMethod = true;
+        public bool SearchFieldMethod { get => _searchFieldMethod; set { if (SetField(ref _searchFieldMethod, value)) RunSearch(); } }
+
+        private bool _searchFieldStatusCode = true;
+        public bool SearchFieldStatusCode { get => _searchFieldStatusCode; set { if (SetField(ref _searchFieldStatusCode, value)) RunSearch(); } }
+
+        private bool _searchFieldRequestHeaders = true;
+        public bool SearchFieldRequestHeaders { get => _searchFieldRequestHeaders; set { if (SetField(ref _searchFieldRequestHeaders, value)) RunSearch(); } }
+
+        private bool _searchFieldRequestBody = true;
+        public bool SearchFieldRequestBody { get => _searchFieldRequestBody; set { if (SetField(ref _searchFieldRequestBody, value)) RunSearch(); } }
+
+        private bool _searchFieldResponseHeaders = true;
+        public bool SearchFieldResponseHeaders { get => _searchFieldResponseHeaders; set { if (SetField(ref _searchFieldResponseHeaders, value)) RunSearch(); } }
+
+        private bool _searchFieldResponseBody = true;
+        public bool SearchFieldResponseBody { get => _searchFieldResponseBody; set { if (SetField(ref _searchFieldResponseBody, value)) RunSearch(); } }
+
+        public ObservableCollection<SearchResultItem> SearchResults { get; } = new ObservableCollection<SearchResultItem>();
+
+        private SearchOptions BuildSearchOptions()
+        {
+            var options = new SearchOptions { Keyword = SearchKeyword, UseRegex = SearchUseRegex };
+            options.Fields.Clear();
+            if (SearchFieldHost) options.Fields.Add(SearchField.Host);
+            if (SearchFieldUrl) options.Fields.Add(SearchField.Url);
+            if (SearchFieldMethod) options.Fields.Add(SearchField.Method);
+            if (SearchFieldStatusCode) options.Fields.Add(SearchField.StatusCode);
+            if (SearchFieldRequestHeaders) options.Fields.Add(SearchField.RequestHeaders);
+            if (SearchFieldRequestBody) options.Fields.Add(SearchField.RequestBody);
+            if (SearchFieldResponseHeaders) options.Fields.Add(SearchField.ResponseHeaders);
+            if (SearchFieldResponseBody) options.Fields.Add(SearchField.ResponseBody);
+            return options;
+        }
+
+        /// <summary>
+        /// 按当前搜索条件遍历会话列表，重建搜索结果集合。会话数较多且逐字段做正则时可能耗时，
+        /// 但通常在千级以内会话规模下仍在可接受范围，暂不做额外的异步/节流处理。
+        /// </summary>
+        private void RunSearch()
+        {
+            SearchResults.Clear();
+            if (string.IsNullOrEmpty(SearchKeyword)) return;
+
+            SearchOptions options = BuildSearchOptions();
+            if (options.Fields.Count == 0) return;
+
+            foreach (RequestVo requestVo in Sessions)
+            {
+                foreach (SearchField field in options.Fields)
+                {
+                    string text = requestVo.GetSearchableText(field);
+                    foreach (var (start, length) in SearchEngine.FindMatches(text, options))
+                    {
+                        string matchedText = text.Substring(start, length);
+                        string snippet = SearchEngine.BuildSnippet(text, start, length);
+                        SearchResults.Add(new SearchResultItem(requestVo, field, matchedText, snippet));
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 打开/关闭搜索侧边栏。打开时聚焦关键字输入框；关闭时清空搜索结果与高亮
+        /// </summary>
+        public void ToggleSearchPanel(bool open)
+        {
+            IsSearchPanelOpen = open;
+            if (!open)
+            {
+                SearchKeyword = "";
+                ClearHighlight();
+            }
+            else
+            {
+                this.Dispatcher.InvokeAsync(() => SearchKeywordTextBox.Focus());
+            }
+        }
+
+        /// <summary>
+        /// 跳转到指定搜索结果：切换选中会话（触发消息重建），随后在对应编辑器中定位并高亮命中文本
+        /// </summary>
+        public void JumpToSearchResult(SearchResultItem item)
+        {
+            if (SelectedSession != item.RequestVo)
+            {
+                SelectedSession = item.RequestVo;
+            }
+
+            // 消息对象刚重建，等界面完成一轮渲染后再定位，确保 TextEditor.Text 已同步为最新内容
+            this.Dispatcher.InvokeAsync(() => HighlightAndScrollTo(item), DispatcherPriority.Loaded);
+        }
+
+        private void HighlightAndScrollTo(SearchResultItem item)
+        {
+            var editor = item.IsRequestSide ? RequestEditor : ResponseEditor;
+            string text = editor.Text ?? "";
+            int index = text.IndexOf(item.MatchedText, StringComparison.OrdinalIgnoreCase);
+            if (index < 0)
+            {
+                // 命中位置落在超大内容被截断的部分（编辑框只显示前 MaxDisplayLength 字符），无法在当前视图中定位。
+                // 提示用户改用"编辑完整请求体/响应体"弹窗查看完整内容，而不是静默无反应。
+                MessageBox.Show("命中内容位于超长文本被截断的部分，无法在当前视图中定位。\n请使用下方“编辑完整请求体/响应体”按钮查看完整内容。",
+                    "无法定位", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            _highlightRenderer.SetHighlight(editor, index, item.MatchedText.Length);
+            editor.ScrollToLine(editor.Document.GetLineByOffset(index).LineNumber);
+            editor.Select(index, item.MatchedText.Length);
+        }
+
+        /// <summary>
+        /// 清空当前的常驻高亮标记（关闭搜索面板时调用）
+        /// </summary>
+        private void ClearHighlight()
+        {
+            _highlightRenderer.SetHighlight(RequestEditor, -1, 0);
+            _highlightRenderer.SetHighlight(ResponseEditor, -1, 0);
+        }
+
+        private void Main_OnPreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.F && Keyboard.Modifiers == ModifierKeys.Control)
+            {
+                ToggleSearchPanel(true);
+                e.Handled = true;
+            }
+        }
+
+        private void Search_OnClick(object sender, RoutedEventArgs e)
+        {
+            ToggleSearchPanel(!IsSearchPanelOpen);
+        }
+
+        private void CloseSearch_OnClick(object sender, RoutedEventArgs e)
+        {
+            ToggleSearchPanel(false);
+        }
+
+        private void SearchKeywordTextBox_OnKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape)
+            {
+                ToggleSearchPanel(false);
+                e.Handled = true;
+            }
+        }
+
+        private void SearchResultsListView_OnMouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (SearchResultsListView.SelectedItem is SearchResultItem item)
+            {
+                JumpToSearchResult(item);
+            }
+        }
+
+        #endregion
 
         /// <summary>
         /// 按分组启用状态展平出参与匹配的规则（分组未启用时其下规则整体跳过）
@@ -88,19 +326,45 @@ namespace net8._0_ProxyWPF.code.Pages
         public RequestMessage RequestMessage
         {
             get => _requestMessage;
-            set => SetField(ref _requestMessage, value);
+            set
+            {
+                SetField(ref _requestMessage, value);
+                SyncRequestEditorText();
+            }
         }
 
         public ResponseMessage ResponseMessage
         {
             get => _responseMessage;
-            set => SetField(ref _responseMessage, value);
+            set
+            {
+                SetField(ref _responseMessage, value);
+                SyncResponseEditorText();
+            }
+        }
+
+        /// <summary>
+        /// AvalonEdit TextEditor 的 Text 不是标准依赖属性、不支持 XAML 双向绑定，需要在内容变化时手动同步。
+        /// </summary>
+        private void SyncRequestEditorText()
+        {
+            RequestEditor.Text = RequestMessage?.DisplayMessage ?? "";
+        }
+
+        private void SyncResponseEditorText()
+        {
+            ResponseEditor.Text = ResponseMessage?.DisplayMessage ?? "";
         }
 
 
         public Main()
         {
             InitializeComponent();
+
+            _sessionsView = CollectionViewSource.GetDefaultView(Sessions);
+            _sessionsView.Filter = SessionFilter;
+
+            this.PreviewKeyDown += Main_OnPreviewKeyDown;
 
             AppConfig config = ConfigService.Load();
             LoadConfig(config);
@@ -118,7 +382,19 @@ namespace net8._0_ProxyWPF.code.Pages
 
             proxyConnect.AddBeforeRequestTask("URL 打印", 1, session =>
             {
-                this.Dispatcher.Invoke(() => { this.Sessions.Add(new RequestVo(session)); });
+                RequestVo requestVo = new RequestVo(session);
+                if (OnlyShowIntercepted && DiscardNonIntercepted)
+                {
+                    // 硬丢弃模式：先暂缓加入列表，等请求+响应两阶段拦截判定都完成后再决定是否补加入
+                    lock (_pendingSessionsLock)
+                    {
+                        _pendingSessions[session] = requestVo;
+                    }
+                }
+                else
+                {
+                    this.Dispatcher.Invoke(() => { this.Sessions.Add(requestVo); });
+                }
 
                 Console.WriteLine($"{session.HttpClient.Request.Method} {session.HttpClient.Request.Url}");
                 return true;
@@ -129,11 +405,15 @@ namespace net8._0_ProxyWPF.code.Pages
                 Request httpClientRequest = session.HttpClient.Request;
                 foreach (RequestMatch requestMatch in EnabledRequestMatches)
                 {
-                    if (requestMatch.InterceptRequest && RequestMatch.MatchingRules(httpClientRequest, requestMatch))
+                    if (!RequestMatch.MatchingRules(httpClientRequest, requestMatch)) continue;
+
+                    MarkIntercepted(session);
+
+                    if (requestMatch.InterceptRequest)
                     {
                         lock (session)
                         {
-                            RequestVo requestVo = this.Sessions.FirstOrDefault(x => x.Session == session);
+                            RequestVo requestVo = FindOrAdoptRequestVo(session);
                             this.Dispatcher.Invoke(() => { requestVo.BlockingRequest = true; });
                             Monitor.Wait(session);
                             this.Dispatcher.Invoke(() => { requestVo.BlockingRequest = false; });
@@ -160,12 +440,16 @@ namespace net8._0_ProxyWPF.code.Pages
                 Response httpClientResponse = session.HttpClient.Response;
                 foreach (RequestMatch requestMatch in EnabledRequestMatches)
                 {
-                    if (requestMatch.InterceptResponse && RequestMatch.MatchingRules(httpClientRequest, requestMatch))
+                    if (!RequestMatch.MatchingRules(httpClientRequest, requestMatch)) continue;
+
+                    MarkIntercepted(session);
+
+                    if (requestMatch.InterceptResponse)
                     {
                         lock (session)
                         {
                             //查找到对应的 RequestVo
-                            RequestVo requestVo = this.Sessions.FirstOrDefault(x => x.Session == session);
+                            RequestVo requestVo = FindOrAdoptRequestVo(session);
                             this.Dispatcher.Invoke(() => { requestVo.Blocking = true; });
                             // ProxyConnect.SemaphoreDict[session].Semaphore.Wait();
                             Monitor.Wait(session);
@@ -174,6 +458,13 @@ namespace net8._0_ProxyWPF.code.Pages
                             return true;
                         }
                     }
+                }
+
+                // 响应阶段判定结束：若该会话既未命中任何拦截规则、也从未被加入列表（硬丢弃模式暂缓中），
+                // 则维持丢弃状态（正常转发但不渲染）；FindOrAdoptRequestVo 已在命中时机负责补加入
+                lock (_pendingSessionsLock)
+                {
+                    _pendingSessions.Remove(session);
                 }
 
                 return true;
@@ -185,9 +476,89 @@ namespace net8._0_ProxyWPF.code.Pages
                 return true;
             });
 
+            proxyConnect.AddAfterResponseTask("清理暂缓会话", 2, session =>
+            {
+                // 兜底清理：若 BeforeResponse 阶段因异常等原因未能移除，避免 _pendingSessions 内存泄漏
+                lock (_pendingSessionsLock)
+                {
+                    _pendingSessions.Remove(session);
+                }
+                return true;
+            });
+
             proxyConnect.CreateProxyServer();
             proxyConnect.StartProxy();
             proxyConnect.SettingSystemProxy();
+        }
+
+        /// <summary>
+        /// 判断当前是否已把 Sessions 加入过滤视图（"只展示拦截请求"过滤谓词）
+        /// </summary>
+        private bool SessionFilter(object obj)
+        {
+            if (!OnlyShowIntercepted) return true;
+            return obj is RequestVo requestVo && requestVo.Intercepted;
+        }
+
+        /// <summary>
+        /// 将会话标记为已命中拦截规则；若该会话此前因"硬丢弃"暂缓未加入列表，则在此刻补加入
+        /// </summary>
+        private void MarkIntercepted(SessionEventArgs session)
+        {
+            RequestVo pendingVo = null;
+            lock (_pendingSessionsLock)
+            {
+                if (_pendingSessions.TryGetValue(session, out RequestVo vo))
+                {
+                    pendingVo = vo;
+                    _pendingSessions.Remove(session);
+                }
+            }
+
+            this.Dispatcher.Invoke(() =>
+            {
+                if (pendingVo != null && !this.Sessions.Contains(pendingVo))
+                {
+                    pendingVo.Intercepted = true;
+                    this.Sessions.Add(pendingVo); // Add 触发 CollectionChanged，过滤视图会自动重新求值该项
+                }
+                else
+                {
+                    RequestVo requestVo = this.Sessions.FirstOrDefault(x => x.Session == session);
+                    if (requestVo != null && !requestVo.Intercepted)
+                    {
+                        requestVo.Intercepted = true;
+                        // 该会话已在列表中，仅属性变化不会被 ICollectionView 自动感知，需手动刷新过滤视图
+                        _sessionsView.Refresh();
+                    }
+                }
+            });
+        }
+
+        /// <summary>
+        /// 拦截阻塞前查找对应 RequestVo；若因"硬丢弃"暂缓尚未加入列表，则先补加入（此刻必然已命中拦截规则）
+        /// </summary>
+        private RequestVo FindOrAdoptRequestVo(SessionEventArgs session)
+        {
+            RequestVo result = null;
+            this.Dispatcher.Invoke(() =>
+            {
+                result = this.Sessions.FirstOrDefault(x => x.Session == session);
+                if (result == null)
+                {
+                    lock (_pendingSessionsLock)
+                    {
+                        if (_pendingSessions.TryGetValue(session, out RequestVo pendingVo))
+                        {
+                            _pendingSessions.Remove(session);
+                            pendingVo.Intercepted = true;
+                            this.Sessions.Add(pendingVo);
+                            result = pendingVo;
+                        }
+                    }
+                }
+            });
+            return result;
         }
 
         /// <summary>
@@ -280,7 +651,7 @@ namespace net8._0_ProxyWPF.code.Pages
                 // 内容过大截断展示时编辑框为只读，此时用户只能通过"编辑完整请求体"弹窗修改 ReqBody，主编辑框内容与 AllMessage 始终一致
                 string textToParse = RequestMessage != null && RequestMessage.IsTruncated
                     ? RequestMessage.AllMessage
-                    : this.Request.Text;
+                    : this.RequestEditor.Text;
                 ParseHttpRequestText(textToParse, request);
             }
             catch (Exception ex)
@@ -365,7 +736,7 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
             // 内容过大截断展示时编辑框为只读，此时用户只能通过"编辑完整响应体"弹窗修改 RespBody，主编辑框内容与 AllMessage 始终一致
             string responseText = ResponseMessage != null && ResponseMessage.IsTruncated
                 ? ResponseMessage.AllMessage
-                : Response.Text;
+                : ResponseEditor.Text;
             Response response = SelectedSession.Session.HttpClient.Response;
 
             try
@@ -854,6 +1225,7 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
             if (result != null)
             {
                 ResponseMessage.RespBody = result;
+                SyncResponseEditorText();
             }
         }
 
@@ -868,6 +1240,7 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
             if (result != null)
             {
                 RequestMessage.ReqBody = result;
+                SyncRequestEditorText();
             }
         }
 
@@ -882,6 +1255,7 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
             if (result != null)
             {
                 ResponseMessage.RespBody = result;
+                SyncResponseEditorText();
             }
         }
 

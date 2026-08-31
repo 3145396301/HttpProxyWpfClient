@@ -5,6 +5,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
       xmlns:loc="clr-namespace:net8._0_ProxyWPF.code.Loc"
+      xmlns:avalonedit="clr-namespace:ICSharpCode.AvalonEdit;assembly=ICSharpCode.AvalonEdit"
       mc:Ignorable="d"
       Title="Main"
       DataContext="{Binding RelativeSource={RelativeSource Self}}">
@@ -14,6 +15,12 @@
     </Page.Resources>
 
     <Grid Margin="5">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <Grid Grid.Column="0">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -22,7 +29,21 @@
         <!-- 顶部按钮栏 -->
         <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
             <ui:Button Click="block_OnClick" Margin="0,0,5,0">拦截</ui:Button>
-            <ui:Button Click="discharged_OnClick">全部放行</ui:Button>
+            <ui:Button Click="discharged_OnClick" Margin="0,0,15,0">全部放行</ui:Button>
+
+            <ui:TextBlock Text="只展示拦截请求" Foreground="AliceBlue" VerticalAlignment="Center" Margin="0,0,5,0"/>
+            <ui:ToggleSwitch Name="OnlyShowInterceptedToggle"
+                              IsChecked="{Binding OnlyShowIntercepted, Mode=TwoWay}"
+                              VerticalAlignment="Center" Margin="0,0,15,0"/>
+
+            <ui:TextBlock Text="直接丢弃非拦截请求" Foreground="AliceBlue" VerticalAlignment="Center" Margin="0,0,5,0"
+                          Visibility="{Binding OnlyShowIntercepted, Converter={StaticResource BoolToVisibility}}"/>
+            <ui:ToggleSwitch Name="DiscardNonInterceptedToggle"
+                              IsChecked="{Binding DiscardNonIntercepted, Mode=TwoWay}"
+                              VerticalAlignment="Center" Margin="0,0,15,0"
+                              Visibility="{Binding OnlyShowIntercepted, Converter={StaticResource BoolToVisibility}}"/>
+
+            <ui:Button Click="Search_OnClick">搜索 (Ctrl+F)</ui:Button>
         </StackPanel>
 
         <!-- 主内容区域 -->
@@ -120,12 +141,13 @@
 
                         <ui:TextBlock Text="请求内容" Margin="5,2" FontWeight="SemiBold" Foreground="White"/>
 
-                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
-                            <ui:TextBox Name="Request" BorderThickness="0" Background="Transparent"
-                                     Text="{Binding RequestMessage.DisplayMessage, Mode=OneWay}" TextWrapping="NoWrap"
-                                     IsReadOnly="{Binding RequestMessage.IsTruncated}"
-                                     FontFamily="Consolas" AcceptsReturn="True" />
-                        </ScrollViewer>
+                        <avalonedit:TextEditor Name="RequestEditor" Grid.Row="1"
+                                                Background="Transparent" Foreground="White"
+                                                FontFamily="Consolas" WordWrap="False"
+                                                IsReadOnly="{Binding RequestMessage.IsTruncated}"
+                                                HorizontalScrollBarVisibility="Auto"
+                                                VerticalScrollBarVisibility="Auto"
+                                                ShowLineNumbers="False"/>
 
                         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5">
                             <ui:Button Click="EditRequestBody_OnClick" Margin="0,0,5,0"
@@ -150,12 +172,13 @@
                         <ui:TextBlock Text="响应内容" Margin="5,2" FontWeight="SemiBold"
                                    Foreground="White" />
 
-                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
-                            <ui:TextBox Name="Response" BorderThickness="0" Background="Transparent"
-                                     Text="{Binding ResponseMessage.DisplayMessage, Mode=OneWay}" TextWrapping="NoWrap"
-                                     IsReadOnly="{Binding ResponseMessage.IsTruncated}"
-                                     FontFamily="Consolas" AcceptsReturn="True" />
-                        </ScrollViewer>
+                        <avalonedit:TextEditor Name="ResponseEditor" Grid.Row="1"
+                                                Background="Transparent" Foreground="White"
+                                                FontFamily="Consolas" WordWrap="False"
+                                                IsReadOnly="{Binding ResponseMessage.IsTruncated}"
+                                                HorizontalScrollBarVisibility="Auto"
+                                                VerticalScrollBarVisibility="Auto"
+                                                ShowLineNumbers="False"/>
 
                         <!-- 操作按钮 + 失败/未完成提示 -->
                         <Grid Grid.Row="2" Margin="5">
@@ -191,5 +214,69 @@
                 </Border>
             </Grid>
         </Grid>
+        </Grid>
+
+        <!-- 分割线：搜索侧边栏 -->
+        <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Left"
+                      Background="Transparent" Cursor="SizeWE"
+                      Visibility="{Binding IsSearchPanelOpen, Converter={StaticResource BoolToVisibility}}"/>
+
+        <!-- 搜索侧边栏 -->
+        <Border Grid.Column="1" Width="320"  Margin="5,0,0,0"
+                CornerRadius="3" BorderThickness="1"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                Visibility="{Binding IsSearchPanelOpen, Converter={StaticResource BoolToVisibility}}">
+            <Grid Margin="8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="0,0,0,6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <ui:TextBox Name="SearchKeywordTextBox" Grid.Column="0"
+                                Text="{Binding SearchKeyword, UpdateSourceTrigger=PropertyChanged}"
+                                KeyDown="SearchKeywordTextBox_OnKeyDown"/>
+                    <ui:Button Grid.Column="1" Margin="4,0,0,0" Click="CloseSearch_OnClick">关闭</ui:Button>
+                </Grid>
+
+                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,6">
+                    <CheckBox Content="启用正则表达式" IsChecked="{Binding SearchUseRegex}"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="2" Margin="0,0,0,6">
+                    <ui:TextBlock Text="搜索范围：" Foreground="AliceBlue" Margin="0,0,0,4"/>
+                    <WrapPanel>
+                        <CheckBox Content="域名" Margin="0,0,10,4" IsChecked="{Binding SearchFieldHost}"/>
+                        <CheckBox Content="URL" Margin="0,0,10,4" IsChecked="{Binding SearchFieldUrl}"/>
+                        <CheckBox Content="方法" Margin="0,0,10,4" IsChecked="{Binding SearchFieldMethod}"/>
+                        <CheckBox Content="状态码" Margin="0,0,10,4" IsChecked="{Binding SearchFieldStatusCode}"/>
+                        <CheckBox Content="请求头" Margin="0,0,10,4" IsChecked="{Binding SearchFieldRequestHeaders}"/>
+                        <CheckBox Content="请求体" Margin="0,0,10,4" IsChecked="{Binding SearchFieldRequestBody}"/>
+                        <CheckBox Content="响应头" Margin="0,0,10,4" IsChecked="{Binding SearchFieldResponseHeaders}"/>
+                        <CheckBox Content="响应体" Margin="0,0,10,4" IsChecked="{Binding SearchFieldResponseBody}"/>
+                    </WrapPanel>
+                </StackPanel>
+
+                <ui:ListView Grid.Row="3" Name="SearchResultsListView"
+                             ItemsSource="{Binding SearchResults}"
+                             MouseDoubleClick="SearchResultsListView_OnMouseDoubleClick">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Margin="0,2">
+                                <ui:TextBlock Text="{Binding RequestVo.Url}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                <ui:TextBlock Text="{Binding FieldDisplayName}" FontSize="11" Opacity="0.7"/>
+                                <ui:TextBlock Text="{Binding Snippet}" TextWrapping="Wrap" FontSize="11" Opacity="0.85"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ui:ListView>
+            </Grid>
+        </Border>
     </Grid>
 </Page>

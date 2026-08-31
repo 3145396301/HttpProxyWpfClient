@@ -1,6 +1,8 @@
-﻿using System;
+using System;
 using net8._0_ProxyWPF.code.@base;
 using Titanium.Web.Proxy.EventArguments;
+using Titanium.Web.Proxy.Http;
+using Titanium.Web.Proxy.Models;
 
 namespace net8._0_ProxyWPF.code.net.entity
 {
@@ -21,6 +23,7 @@ namespace net8._0_ProxyWPF.code.net.entity
         private string _method;
         private bool _blocking;
         private bool _blockingRequest;
+        private bool _intercepted;
 
         public long? BodySize
         {
@@ -102,6 +105,16 @@ namespace net8._0_ProxyWPF.code.net.entity
             set=> SetProperty(ref _blockingRequest, value);
         }
 
+        /// <summary>
+        /// 该会话是否命中了任意已启用分组下的启用拦截规则（请求或响应阶段任一命中即为 true）。
+        /// 用于"只展示拦截请求"过滤视图的判定依据。
+        /// </summary>
+        public bool Intercepted
+        {
+            get=> _intercepted;
+            set=> SetProperty(ref _intercepted, value);
+        }
+
 
 
 
@@ -129,6 +142,52 @@ namespace net8._0_ProxyWPF.code.net.entity
             Url = session.HttpClient.Request.RequestUri.AbsolutePath;
         }
 
+        /// <summary>
+        /// 取出指定搜索字段对应的原始文本，用于搜索引擎匹配。读取响应体等可能失败的内容时容错返回空字符串，
+        /// 不影响其余字段的搜索（例如响应尚未完成解析时）。
+        /// </summary>
+        public string GetSearchableText(SearchField field)
+        {
+            try
+            {
+                switch (field)
+                {
+                    case SearchField.Host:
+                        return Host ?? "";
+                    case SearchField.Url:
+                        return Session.HttpClient.Request.RequestUri.AbsoluteUri;
+                    case SearchField.Method:
+                        return Method ?? "";
+                    case SearchField.StatusCode:
+                        return Session.HttpClient.Response.StatusCode.ToString();
+                    case SearchField.RequestHeaders:
+                        return HeadersToText(Session.HttpClient.Request.Headers);
+                    case SearchField.RequestBody:
+                        return Session.HttpClient.Request.HasBody
+                            ? System.Text.Encoding.UTF8.GetString(Session.HttpClient.Request.Body)
+                            : "";
+                    case SearchField.ResponseHeaders:
+                        return HeadersToText(Session.HttpClient.Response.Headers);
+                    case SearchField.ResponseBody:
+                        return Session.HttpClient.Response.HasBody ? Session.HttpClient.Response.BodyString : "";
+                    default:
+                        return "";
+                }
+            }
+            catch
+            {
+                return "";
+            }
+        }
 
+        private static string HeadersToText(HeaderCollection headers)
+        {
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            foreach (HttpHeader header in headers)
+            {
+                sb.Append(header.Name).Append(": ").Append(header.Value).Append("\r\n");
+            }
+            return sb.ToString();
+        }
     }
 }
