@@ -6,10 +6,12 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using ICSharpCode.AvalonEdit;
 using net8._0_ProxyWPF.code.net;
 using net8._0_ProxyWPF.code.net.entity;
 using net8._0_ProxyWPF.code.net.util;
@@ -24,6 +26,25 @@ namespace net8._0_ProxyWPF.code.Pages
     {
         private ProxyConnect proxyConnect;
         private readonly SearchHighlightRenderer _highlightRenderer = new();
+
+        private const double ContentFontSizeMin = 8;
+        private const double ContentFontSizeMax = 40;
+        private double _requestContentFontSize = 13;
+        private double _responseContentFontSize = 13;
+        private double _editBodyFontSize = 13;
+
+        /// <summary>
+        /// 会话列表单列：键、对应的 GridViewColumn、当前显隐与默认宽度
+        /// </summary>
+        private sealed class SessionColumnDef
+        {
+            public string Key = "";
+            public GridViewColumn Column = null!;
+            public bool Visible = true;
+            public double DefaultWidth = 100;
+        }
+
+        private readonly List<SessionColumnDef> _sessionColumns = new();
 
         /// <summary>
         /// 供设置页读取当前生效的代理配置，用于打开设置页时回填输入框
@@ -166,7 +187,7 @@ namespace net8._0_ProxyWPF.code.Pages
                     {
                         string matchedText = text.Substring(start, length);
                         string snippet = SearchEngine.BuildSnippet(text, start, length);
-                        SearchResults.Add(new SearchResultItem(requestVo, field, matchedText, snippet));
+                        SearchResults.Add(new SearchResultItem(requestVo, field, matchedText, start, snippet));
                     }
                 }
             }
@@ -207,19 +228,123 @@ namespace net8._0_ProxyWPF.code.Pages
         {
             var editor = item.IsRequestSide ? RequestEditor : ResponseEditor;
             string text = editor.Text ?? "";
-            int index = text.IndexOf(item.MatchedText, StringComparison.OrdinalIgnoreCase);
-            if (index < 0)
+
+            int index = LocateMatch(item, text);
+            if (index >= 0)
             {
-                // 命中位置落在超大内容被截断的部分（编辑框只显示前 MaxDisplayLength 字符），无法在当前视图中定位。
-                // 提示用户改用"编辑完整请求体/响应体"弹窗查看完整内容，而不是静默无反应。
-                MessageBox.Show("命中内容位于超长文本被截断的部分，无法在当前视图中定位。\n请使用下方“编辑完整请求体/响应体”按钮查看完整内容。",
-                    "无法定位", MessageBoxButton.OK, MessageBoxImage.Information);
+                LocateInEditor(editor, index, item.MatchedText.Length);
                 return;
             }
 
-            _highlightRenderer.SetHighlight(editor, index, item.MatchedText.Length);
-            editor.ScrollToLine(editor.Document.GetLineByOffset(index).LineNumber);
-            editor.Select(index, item.MatchedText.Length);
+            // 命中位置落在超大内容被截断的部分（编辑框只显示前 MaxDisplayLength 字符），无法在当前视图中定位。
+            // 提供"强制展示"入口，并在执行前二次确认大文本渲染可能造成的卡顿
+            if (!PromptForceDisplay())
+            {
+                return;
+            }
+
+            var confirm = MessageBox.Show("强制展示完整内容可能造成界面卡顿，是否继续？",
+                "确认", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if (confirm != MessageBoxResult.Yes)
+            {
+                return;
+            }
+
+            ForceDisplay(item);
+        }
+
+        /// <summary>
+        /// 在渲染文本中定位命中位置：请求/响应体字段用搜索时记录的精确定位（加上头部长度换算到编辑器坐标），
+        /// 其余字段回退到全文 IndexOf；找不到返回 -1。
+        /// </summary>
+        private int LocateMatch(SearchResultItem item, string text)
+        {
+            // 体字段的搜索来源是纯 body，而渲染文本是 头+body，需加上头部长度换算
+            if (item.Field is SearchField.RequestBody or SearchField.ResponseBody)
+            {
+                int headerLen = item.IsRequestSide
+                    ? (RequestMessage?.ReqRow?.Length ?? 0)
+                    : (ResponseMessage?.RespRow?.Length ?? 0);
+                int candidate = item.StartOffset + headerLen;
+                if (candidate >= 0
+                    && candidate + item.MatchedText.Length <= text.Length
+                    && string.Compare(text, candidate, item.MatchedText, 0, item.MatchedText.Length, StringComparison.OrdinalIgnoreCase) == 0)
+                {
+                    return candidate;
+                }
+            }
+
+            return text.IndexOf(item.MatchedText, StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// 高亮并滚动到编辑器中的命中区间。用 BringCaretToView 兼顾横向滚动，
+        /// 避免整段内容为单行（无换行）时 ScrollToLine 无法定位的问题。
+        /// </summary>
+        private void LocateInEditor(TextEditor editor, int index, int length)
+        {
+            _highlightRenderer.SetHighlight(editor, index, length);
+            editor.Select(index, length);
+            var line = editor.Document.GetLineByOffset(index);
+            editor.ScrollToLine(line.LineNumber);
+            editor.TextArea.Caret.BringCaretToView();
+        }
+
+        /// <summary>
+        /// 命中内容位于截断部分时的提示弹窗，提供"强制展示"按钮；返回是否点击了"强制展示"
+        /// </summary>
+        private bool PromptForceDisplay()
+        {
+            var panel = new StackPanel { Margin = new Thickness(15) };
+            panel.Children.Add(new TextBlock
+            {
+                Text = "命中内容位于超长文本被截断的部分，当前编辑框无法定位到该位置。\n\n" +
+                       "点击“强制展示”将在编辑框中加载完整内容并定位到命中位置；\n" +
+                       "超大文本渲染可能导致界面卡顿，也可以关闭本提示，改用下方“编辑完整请求体/响应体”按钮查看。",
+                TextWrapping = TextWrapping.Wrap,
+                Margin = new Thickness(0, 0, 0, 15)
+            });
+
+            var buttonPanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Right
+            };
+            var cancelBtn = new Button { Content = "取消", Width = 75, Margin = new Thickness(5, 0, 0, 0) };
+            var forceBtn = new Button { Content = "强制展示", Width = 90, Margin = new Thickness(5, 0, 0, 0) };
+            buttonPanel.Children.Add(cancelBtn);
+            buttonPanel.Children.Add(forceBtn);
+            panel.Children.Add(buttonPanel);
+
+            forceBtn.Click += (s, e) => DialogHelper.CloseWithResult<bool>(Window.GetWindow(forceBtn), true);
+            cancelBtn.Click += (s, e) => DialogHelper.CloseWithResult<bool>(Window.GetWindow(cancelBtn), false);
+
+            var dialogTask = DialogHelper.ShowDialogAsync<bool>("无法定位", panel, true, 500, 240);
+            return dialogTask.GetAwaiter().GetResult() == true;
+        }
+
+        /// <summary>
+        /// 强制在编辑框中加载完整内容并定位到命中位置（超大文本渲染可能卡顿）。
+        /// 超大文本的布局是异步完成的，定位操作延迟到渲染结束后再执行，否则会定位不到正确位置。
+        /// </summary>
+        private void ForceDisplay(SearchResultItem item)
+        {
+            var editor = item.IsRequestSide ? RequestEditor : ResponseEditor;
+            string fullText = item.IsRequestSide ? RequestMessage?.AllMessage : ResponseMessage?.AllMessage;
+            if (string.IsNullOrEmpty(fullText))
+            {
+                return;
+            }
+
+            editor.Text = fullText;
+            int index = LocateMatch(item, fullText);
+            if (index < 0)
+            {
+                return;
+            }
+
+            this.Dispatcher.InvokeAsync(() => LocateInEditor(editor, index, item.MatchedText.Length),
+                DispatcherPriority.ApplicationIdle);
         }
 
         /// <summary>
@@ -245,9 +370,10 @@ namespace net8._0_ProxyWPF.code.Pages
             ToggleSearchPanel(!IsSearchPanelOpen);
         }
 
-        private void CloseSearch_OnClick(object sender, RoutedEventArgs e)
+        private void ReSearch_OnClick(object sender, RoutedEventArgs e)
         {
-            ToggleSearchPanel(false);
+            // 关键词/选项变化会自动触发搜索，此按钮用于会话列表有新数据后按当前条件重新搜索
+            RunSearch();
         }
 
         private void SearchKeywordTextBox_OnKeyDown(object sender, KeyEventArgs e)
@@ -319,6 +445,30 @@ namespace net8._0_ProxyWPF.code.Pages
             });
         }
 
+        /// <summary>
+        /// 响应完成后填充会话列表的响应类型/长度列（在代理响应回调线程上调用，切回 UI 线程更新）
+        /// </summary>
+        private void UpdateResponseInfo(SessionEventArgs session)
+        {
+            this.Dispatcher.Invoke(() =>
+            {
+                RequestVo requestVo = this.Sessions.FirstOrDefault(x => x.Session == session);
+                if (requestVo == null)
+                {
+                    lock (_pendingSessionsLock)
+                    {
+                        if (_pendingSessions.TryGetValue(session, out RequestVo pendingVo))
+                        {
+                            pendingVo.CaptureResponse();
+                        }
+                    }
+                    return;
+                }
+
+                requestVo.CaptureResponse();
+            });
+        }
+
         private RequestMessage _requestMessage;
         private ResponseMessage _responseMessage;
 
@@ -361,6 +511,18 @@ namespace net8._0_ProxyWPF.code.Pages
         {
             InitializeComponent();
 
+            _sessionColumns.AddRange(new[]
+            {
+                new SessionColumnDef { Key = "Up", Column = ColUp, DefaultWidth = 40 },
+                new SessionColumnDef { Key = "Down", Column = ColDown, DefaultWidth = 40 },
+                new SessionColumnDef { Key = "Host", Column = ColHost, DefaultWidth = 120 },
+                new SessionColumnDef { Key = "Protocol", Column = ColProtocol, DefaultWidth = 70 },
+                new SessionColumnDef { Key = "Method", Column = ColMethod, DefaultWidth = 70 },
+                new SessionColumnDef { Key = "Path", Column = ColPath, DefaultWidth = 200 },
+                new SessionColumnDef { Key = "ResponseContentType", Column = ColContentType, DefaultWidth = 130 },
+                new SessionColumnDef { Key = "ResponseLength", Column = ColContentLength, DefaultWidth = 90 }
+            });
+
             _sessionsView = CollectionViewSource.GetDefaultView(Sessions);
             _sessionsView.Filter = SessionFilter;
 
@@ -368,6 +530,10 @@ namespace net8._0_ProxyWPF.code.Pages
 
             AppConfig config = ConfigService.Load();
             LoadConfig(config);
+            LoadSessionColumnLayout(config);
+            ApplyRequestFontSize(config.RequestContentFontSize);
+            ApplyResponseFontSize(config.ResponseContentFontSize);
+            _editBodyFontSize = Math.Clamp(config.EditBodyFontSize, ContentFontSizeMin, ContentFontSizeMax);
 
             proxyConnect = new ProxyConnect()
             {
@@ -431,6 +597,7 @@ namespace net8._0_ProxyWPF.code.Pages
                 // 此时响应体已通过 GetResponseBody 完整读取并保留（KeepBody=true），是刷新界面最安全可靠的时机；
                 // AfterResponse 阶段响应体可能已发送给客户端并被释放，不适合在此读取
                 RefreshMessagesIfSelected(session);
+                UpdateResponseInfo(session);
                 return true;
             });
 
@@ -587,9 +754,140 @@ namespace net8._0_ProxyWPF.code.Pages
                 UpstreamPort = proxyConnect.UpstreamPort == -1 ? null : proxyConnect.UpstreamPort,
                 UpstreamUser = proxyConnect.UpstreamUser,
                 UpstreamPass = proxyConnect.UpstreamPass,
+                RequestContentFontSize = _requestContentFontSize,
+                ResponseContentFontSize = _responseContentFontSize,
+                EditBodyFontSize = _editBodyFontSize,
                 Groups = Groups.ToList()
             };
+            SaveSessionColumnLayout(config);
             ConfigService.Save(config);
+        }
+
+        /// <summary>
+        /// 从配置加载会话列表列显隐与宽度，并重建列集合
+        /// </summary>
+        private void LoadSessionColumnLayout(AppConfig config)
+        {
+            foreach (var col in _sessionColumns)
+            {
+                var setting = config.SessionColumns.FirstOrDefault(s => s.Key == col.Key);
+                if (setting == null) continue;
+                col.Visible = setting.Visible;
+                if (setting.Width > 0 && !double.IsNaN(setting.Width))
+                {
+                    col.Column.Width = setting.Width;
+                }
+            }
+            ApplySessionColumnLayout();
+        }
+
+        /// <summary>
+        /// 按当前显隐状态重建 GridView 列集合（隐藏列从视图中移除）
+        /// </summary>
+        private void ApplySessionColumnLayout()
+        {
+            if (SessionListView.View is not GridView gridView) return;
+            gridView.Columns.Clear();
+            foreach (var col in _sessionColumns)
+            {
+                if (col.Visible)
+                {
+                    gridView.Columns.Add(col.Column);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 把当前列显隐与宽度写入配置（拖拽后的实际宽度存于 GridViewColumn.Width）
+        /// </summary>
+        private void SaveSessionColumnLayout(AppConfig config)
+        {
+            config.SessionColumns.Clear();
+            foreach (var col in _sessionColumns)
+            {
+                double width = double.IsNaN(col.Column.Width) ? col.DefaultWidth : col.Column.Width;
+                config.SessionColumns.Add(new SessionColumnSetting
+                {
+                    Key = col.Key,
+                    Visible = col.Visible,
+                    Width = width
+                });
+            }
+        }
+
+        /// <summary>
+        /// 应用请求内容区字体大小（取值限定在合理范围内）
+        /// </summary>
+        private void ApplyRequestFontSize(double fontSize)
+        {
+            _requestContentFontSize = Math.Clamp(fontSize, ContentFontSizeMin, ContentFontSizeMax);
+            RequestEditor.FontSize = _requestContentFontSize;
+        }
+
+        /// <summary>
+        /// 应用响应内容区字体大小（取值限定在合理范围内）
+        /// </summary>
+        private void ApplyResponseFontSize(double fontSize)
+        {
+            _responseContentFontSize = Math.Clamp(fontSize, ContentFontSizeMin, ContentFontSizeMax);
+            ResponseEditor.FontSize = _responseContentFontSize;
+        }
+
+        /// <summary>
+        /// Ctrl+滚轮 放大/缩小请求/响应内容字体（两区域各自独立记忆字号），并把新字号持久化到配置文件
+        /// </summary>
+        private void ContentEditor_OnPreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            if (Keyboard.Modifiers != ModifierKeys.Control)
+            {
+                return;
+            }
+
+            // 拦截事件，避免 AvalonEdit 在缩放时同时滚动
+            e.Handled = true;
+
+            if (sender == RequestEditor)
+            {
+                double newSize = _requestContentFontSize + (e.Delta > 0 ? 1 : -1);
+                if (newSize < ContentFontSizeMin || newSize > ContentFontSizeMax) return;
+                ApplyRequestFontSize(newSize);
+            }
+            else if (sender == ResponseEditor)
+            {
+                double newSize = _responseContentFontSize + (e.Delta > 0 ? 1 : -1);
+                if (newSize < ContentFontSizeMin || newSize > ContentFontSizeMax) return;
+                ApplyResponseFontSize(newSize);
+            }
+            else
+            {
+                return;
+            }
+
+            SaveConfig();
+        }
+
+        /// <summary>
+        /// "编辑完整请求体/响应体"弹窗内 Ctrl+滚轮 放大/缩小字体，并持久化到配置文件
+        /// </summary>
+        private void EditBodyTextBox_OnPreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            if (Keyboard.Modifiers != ModifierKeys.Control)
+            {
+                return;
+            }
+
+            // 拦截事件，避免 TextBox 在缩放时同时滚动
+            e.Handled = true;
+
+            double newSize = _editBodyFontSize + (e.Delta > 0 ? 1 : -1);
+            if (newSize < ContentFontSizeMin || newSize > ContentFontSizeMax)
+            {
+                return;
+            }
+
+            _editBodyFontSize = newSize;
+            ((TextBox)sender).FontSize = _editBodyFontSize;
+            SaveConfig();
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -668,6 +966,12 @@ namespace net8._0_ProxyWPF.code.Pages
         }
 private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
+            // 右键表头：由 ContextMenuOpening 处理列显隐菜单，这里不选中行
+            if (FindVisualParent<GridViewColumnHeader>(e.OriginalSource as DependencyObject) != null)
+            {
+                return;
+            }
+
             DependencyObject source = e.OriginalSource as DependencyObject;
             while (source != null && source is not Wpf.Ui.Controls.ListViewItem)
             {
@@ -678,6 +982,66 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
             {
                 item.IsSelected = true;
             }
+        }
+
+        /// <summary>
+        /// 右键表头时取消默认上下文菜单，改为弹出列显隐菜单
+        /// </summary>
+        private void SessionList_OnContextMenuOpening(object sender, ContextMenuEventArgs e)
+        {
+            if (FindVisualParent<GridViewColumnHeader>(e.OriginalSource as DependencyObject) == null)
+            {
+                return;
+            }
+
+            e.Handled = true;
+            ShowColumnVisibilityMenu();
+        }
+
+        /// <summary>
+        /// 弹出会话列表列显隐菜单（勾选/取消即展示/隐藏对应列），变更后保存配置
+        /// </summary>
+        private void ShowColumnVisibilityMenu()
+        {
+            var menu = new ContextMenu();
+            foreach (var col in _sessionColumns)
+            {
+                var item = new MenuItem
+                {
+                    Header = col.Column.Header?.ToString() ?? col.Key,
+                    IsCheckable = true,
+                    IsChecked = col.Visible,
+                    StaysOpenOnClick = true
+                };
+                var captured = col;
+                item.Click += (s, e) =>
+                {
+                    // 至少保留一列，否则表头全部消失后无法再次呼出菜单
+                    if (!item.IsChecked && _sessionColumns.Count(c => c.Visible) <= 1)
+                    {
+                        item.IsChecked = true;
+                        return;
+                    }
+
+                    captured.Visible = item.IsChecked;
+                    ApplySessionColumnLayout();
+                    SaveConfig();
+                };
+                menu.Items.Add(item);
+            }
+
+            menu.Placement = PlacementMode.MousePoint;
+            menu.IsOpen = true;
+        }
+
+        private static T? FindVisualParent<T>(DependencyObject? child) where T : DependencyObject
+        {
+            while (child != null)
+            {
+                if (child is T match) return match;
+                child = VisualTreeHelper.GetParent(child);
+            }
+            return null;
         }
 
         private void CopyCurlCmd_OnClick(object sender, RoutedEventArgs e)
@@ -1285,8 +1649,10 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
                 Text = initialText,
                 AcceptsReturn = true,
                 TextWrapping = TextWrapping.NoWrap,
-                FontFamily = new FontFamily("Consolas")
+                FontFamily = new FontFamily("Consolas"),
+                FontSize = _editBodyFontSize
             };
+            textBox.PreviewMouseWheel += EditBodyTextBox_OnPreviewMouseWheel;
             ScrollViewer scrollViewer = new ScrollViewer
             {
                 HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,

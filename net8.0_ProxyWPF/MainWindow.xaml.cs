@@ -52,6 +52,8 @@ namespace net8._0_ProxyWPF
 
             if (pages["Main"] is Main mainPage)
             {
+                // 关闭前保存配置（含会话列表列显隐/列宽、字体大小等），保证拖拽调整在下次启动时恢复
+                mainPage.SaveConfig();
                 await System.Threading.Tasks.Task.Run(() => mainPage.ShutdownProxy());
             }
 

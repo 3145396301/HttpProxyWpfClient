@@ -17,4 +17,34 @@ public class AppConfig
     public string? UpstreamPass { get; set; }
 
     public List<RuleGroup> Groups { get; set; } = new List<RuleGroup>();
+
+    /// <summary>
+    /// 请求内容区字体大小（Ctrl+滚轮可调整）
+    /// </summary>
+    public double RequestContentFontSize { get; set; } = 13;
+
+    /// <summary>
+    /// 响应内容区字体大小（Ctrl+滚轮可调整）
+    /// </summary>
+    public double ResponseContentFontSize { get; set; } = 13;
+
+    /// <summary>
+    /// "编辑完整请求体/响应体"弹窗字体大小（Ctrl+滚轮可调整）
+    /// </summary>
+    public double EditBodyFontSize { get; set; } = 13;
+
+    /// <summary>
+    /// 会话列表各列的显隐与宽度（右键表头可调整）
+    /// </summary>
+    public List<SessionColumnSetting> SessionColumns { get; set; } = new();
+}
+
+/// <summary>
+/// 会话列表单列的持久化配置
+/// </summary>
+public class SessionColumnSetting
+{
+    public string Key { get; set; } = "";
+    public bool Visible { get; set; } = true;
+    public double Width { get; set; } = 100;
 }

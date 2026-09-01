@@ -18,8 +18,8 @@ namespace net8._0_ProxyWPF.code.net.entity
     }
 
     /// <summary>
-    /// 单条搜索结果：命中的会话 + 命中字段 + 命中的实际文本。
-    /// 不存储原始偏移量：跳转高亮时会在实际渲染的编辑器文本中重新定位该文本，避免不同来源之间的偏移量换算误差。
+    /// 单条搜索结果：命中的会话 + 命中字段 + 命中的实际文本 + 命中的原始偏移量。
+    /// 记录原始偏移量是为了跳转时精确落在用户点击的那次命中上，避免仅靠 IndexOf 定位到文本中更早出现的重复内容。
     /// </summary>
     public class SearchResultItem
     {
@@ -30,6 +30,11 @@ namespace net8._0_ProxyWPF.code.net.entity
         /// 命中的实际文本内容，用于跳转时在渲染文本中重新定位
         /// </summary>
         public string MatchedText { get; }
+
+        /// <summary>
+        /// 命中文本在搜索来源文本中的起始偏移量，用于跳转时精确换算到渲染文本坐标
+        /// </summary>
+        public int StartOffset { get; }
 
         /// <summary>
         /// 命中处的上下文摘要（截取命中位置前后一段文本），用于侧边栏结果列表展示
@@ -55,11 +60,12 @@ namespace net8._0_ProxyWPF.code.net.entity
         public bool IsRequestSide => Field is SearchField.Host or SearchField.Url or SearchField.Method
             or SearchField.RequestHeaders or SearchField.RequestBody;
 
-        public SearchResultItem(RequestVo requestVo, SearchField field, string matchedText, string snippet)
+        public SearchResultItem(RequestVo requestVo, SearchField field, string matchedText, int startOffset, string snippet)
         {
             RequestVo = requestVo;
             Field = field;
             MatchedText = matchedText;
+            StartOffset = startOffset;
             Snippet = snippet;
         }
     }

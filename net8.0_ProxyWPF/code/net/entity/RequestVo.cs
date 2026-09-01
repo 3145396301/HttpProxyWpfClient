@@ -21,6 +21,8 @@ namespace net8._0_ProxyWPF.code.net.entity
         private string _statusCode;
         private string _url;
         private string _method;
+        private string _responseContentType = "";
+        private long _responseLength;
         private bool _blocking;
         private bool _blockingRequest;
         private bool _intercepted;
@@ -86,6 +88,40 @@ namespace net8._0_ProxyWPF.code.net.entity
             set=> SetProperty(ref _method, value);
         }
 
+        /// <summary>
+        /// 响应 Content-Type（如 application/json、image/png），响应完成后由 CaptureResponse 填充
+        /// </summary>
+        public string ResponseContentType
+        {
+            get => _responseContentType;
+            set => SetProperty(ref _responseContentType, value);
+        }
+
+        /// <summary>
+        /// 响应体字节数，响应完成后由 CaptureResponse 填充
+        /// </summary>
+        public long ResponseLength
+        {
+            get => _responseLength;
+            set
+            {
+                if (SetProperty(ref _responseLength, value))
+                {
+                    OnPropertyChanged(nameof(ResponseLengthDisplay));
+                }
+            }
+        }
+
+        /// <summary>
+        /// 响应长度的友好展示（B / KB / MB）
+        /// </summary>
+        public string ResponseLengthDisplay => ResponseLength switch
+        {
+            < 1024 => $"{ResponseLength} B",
+            < 1024 * 1024 => $"{ResponseLength / 1024.0:0.#} KB",
+            _ => $"{ResponseLength / (1024.0 * 1024.0):0.#} MB"
+        };
+
         public SessionEventArgs Session
         {
             get=> _session;
@@ -140,6 +176,26 @@ namespace net8._0_ProxyWPF.code.net.entity
             Protocol = session.HttpClient.IsHttps?"https":"http";
             Method = session.HttpClient.Request.Method;
             Url = session.HttpClient.Request.RequestUri.AbsolutePath;
+        }
+
+        /// <summary>
+        /// 响应完成后读取响应类型与响应长度，供列表展示。可在代理响应回调线程上调用（属性变更通知 UI 更新）
+        /// </summary>
+        public void CaptureResponse()
+        {
+            try
+            {
+                var response = _session.HttpClient.Response;
+                if (response == null) return;
+
+                ResponseContentType = response.Headers
+                    .FirstOrDefault(h => string.Equals(h.Name, "Content-Type", StringComparison.OrdinalIgnoreCase))?.Value ?? "";
+                ResponseLength = response.HasBody ? response.Body.Length : 0;
+            }
+            catch
+            {
+                // 响应信息读取失败不影响会话展示
+            }
         }
 
         /// <summary>

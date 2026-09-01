@@ -70,14 +70,15 @@
             </Grid.ColumnDefinitions>
 
             <!-- 左侧会话列表 -->
-            <ui:ListView Grid.Column="0" ItemsSource="{Binding Sessions}"
+            <ui:ListView x:Name="SessionListView" Grid.Column="0" ItemsSource="{Binding Sessions}"
                          SelectedItem="{Binding SelectedSession}"
                          SelectionChanged="Selector_OnSelectionChanged"
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                          ScrollViewer.CanContentScroll="False"
                          VirtualizingPanel.IsVirtualizing="False"
                          KeyDown="UIElement_OnKeyDown"
-                         PreviewMouseRightButtonDown="SessionList_OnPreviewMouseRightButtonDown">
+                         PreviewMouseRightButtonDown="SessionList_OnPreviewMouseRightButtonDown"
+                         ContextMenuOpening="SessionList_OnContextMenuOpening">
                 <ui:ListView.ContextMenu>
                     <ContextMenu>
                         <MenuItem Header="复制为 curl">
@@ -89,7 +90,7 @@
                 </ui:ListView.ContextMenu>
                 <ui:ListView.View>
                     <ui:GridView>
-                        <ui:GridViewColumn Header="上行" Width="40">
+                        <ui:GridViewColumn x:Name="ColUp" Header="上行" Width="40">
                             <ui:GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Ellipse Width="12" Height="12" HorizontalAlignment="Center" VerticalAlignment="Center" Fill="Orange">
@@ -107,7 +108,7 @@
                                 </DataTemplate>
                             </ui:GridViewColumn.CellTemplate>
                         </ui:GridViewColumn>
-                        <ui:GridViewColumn Header="下行" Width="40">
+                        <ui:GridViewColumn x:Name="ColDown" Header="下行" Width="40">
                             <ui:GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Ellipse Width="12" Height="12" HorizontalAlignment="Center" VerticalAlignment="Center" Fill="Red">
@@ -125,10 +126,12 @@
                                 </DataTemplate>
                             </ui:GridViewColumn.CellTemplate>
                         </ui:GridViewColumn>
-<ui:GridViewColumn Header="{loc:Loc Host}" DisplayMemberBinding="{Binding Host}" Width="120" />
-                        <ui:GridViewColumn Header="{loc:Loc Protocol}" DisplayMemberBinding="{Binding Protocol}" Width="70" />
-                        <ui:GridViewColumn Header="{loc:Loc Method}" DisplayMemberBinding="{Binding Method}" Width="70" />
-                        <ui:GridViewColumn Header="{loc:Loc Path}" DisplayMemberBinding="{Binding Url}" Width="200" />
+<ui:GridViewColumn x:Name="ColHost" Header="{loc:Loc Host}" DisplayMemberBinding="{Binding Host}" Width="120" />
+                        <ui:GridViewColumn x:Name="ColProtocol" Header="{loc:Loc Protocol}" DisplayMemberBinding="{Binding Protocol}" Width="70" />
+                        <ui:GridViewColumn x:Name="ColMethod" Header="{loc:Loc Method}" DisplayMemberBinding="{Binding Method}" Width="70" />
+                        <ui:GridViewColumn x:Name="ColPath" Header="{loc:Loc Path}" DisplayMemberBinding="{Binding Url}" Width="200" />
+                        <ui:GridViewColumn x:Name="ColContentType" Header="响应类型" DisplayMemberBinding="{Binding ResponseContentType}" Width="130" />
+                        <ui:GridViewColumn x:Name="ColContentLength" Header="响应长度" DisplayMemberBinding="{Binding ResponseLengthDisplay}" Width="90" />
                     </ui:GridView>
                 </ui:ListView.View>
             </ui:ListView>
@@ -162,7 +165,8 @@
                                                 IsReadOnly="{Binding RequestMessage.IsTruncated}"
                                                 HorizontalScrollBarVisibility="Auto"
                                                 VerticalScrollBarVisibility="Auto"
-                                                ShowLineNumbers="False"/>
+                                                ShowLineNumbers="False"
+                                                PreviewMouseWheel="ContentEditor_OnPreviewMouseWheel"/>
 
                         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5">
                             <ui:Button Click="EditRequestBody_OnClick" Margin="0,0,5,0"
@@ -193,7 +197,8 @@
                                                 IsReadOnly="{Binding ResponseMessage.IsTruncated}"
                                                 HorizontalScrollBarVisibility="Auto"
                                                 VerticalScrollBarVisibility="Auto"
-                                                ShowLineNumbers="False"/>
+                                                ShowLineNumbers="False"
+                                                PreviewMouseWheel="ContentEditor_OnPreviewMouseWheel"/>
 
                         <!-- 操作按钮 + 失败/未完成提示 -->
                         <Grid Grid.Row="2" Margin="5">
@@ -257,7 +262,7 @@
                     <ui:TextBox Name="SearchKeywordTextBox" Grid.Column="0"
                                 Text="{Binding SearchKeyword, UpdateSourceTrigger=PropertyChanged}"
                                 KeyDown="SearchKeywordTextBox_OnKeyDown"/>
-                    <ui:Button Grid.Column="1" Margin="4,0,0,0" Click="CloseSearch_OnClick">关闭</ui:Button>
+                    <ui:Button Grid.Column="1" Margin="4,0,0,0" Click="ReSearch_OnClick">重新搜索</ui:Button>
                 </Grid>
 
                 <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,6">
