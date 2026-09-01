@@ -107,6 +107,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: net8.0_ProxyWPF-${{ matrix.configuration }}.zip
+          body_path: CHANGELOG.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
