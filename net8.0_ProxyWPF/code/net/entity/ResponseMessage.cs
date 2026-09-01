@@ -1,4 +1,6 @@
 using System;
+using System.Text;
+using System.Text.RegularExpressions;
 using net8._0_ProxyWPF.code.@base;
 using Titanium.Web.Proxy.EventArguments;
 using Titanium.Web.Proxy.Http;
@@ -119,7 +121,7 @@ namespace net8._0_ProxyWPF.code.net.entity
             {
                 try
                 {
-                    RespBody = resp.BodyString;
+                    RespBody = DecodeResponseBody(resp);
                 }
                 catch (Exception e)
                 {
@@ -137,6 +139,55 @@ namespace net8._0_ProxyWPF.code.net.entity
                 Error = new Exception("代理未收到有效响应，连接可能在建立或传输过程中被中断（例如证书验证失败、连接被重置或超时）。");
             }
 
+        }
+
+        /// <summary>
+        /// 将响应体字节按响应头声明的字符集解码为文本。
+        /// HTTP 规范在未声明 charset 时默认按 ISO-8859-1，但实际 JSON/文本接口几乎都是 UTF-8；
+        /// 这里在未声明 charset 或声明为 utf-8 时使用 UTF-8，避免中文出现乱码。
+        /// </summary>
+        public static string DecodeResponseBody(Response resp)
+        {
+            if (resp == null || !resp.HasBody || resp.Body == null)
+            {
+                return "";
+            }
+
+            string? charset = null;
+            try
+            {
+                var contentType = resp.Headers?.FirstOrDefault(
+                    h => string.Equals(h.Name, "Content-Type", StringComparison.OrdinalIgnoreCase))?.Value;
+                if (!string.IsNullOrEmpty(contentType))
+                {
+                    var match = Regex.Match(contentType, @"charset\s*=\s*[""']?([^;""']+)", RegexOptions.IgnoreCase);
+                    if (match.Success)
+                    {
+                        charset = match.Groups[1].Value.Trim().Trim('"', '\'');
+                    }
+                }
+            }
+            catch
+            {
+                // 读取头失败时回退 UTF-8
+            }
+
+            if (string.IsNullOrEmpty(charset)
+                || string.Equals(charset, "utf-8", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(charset, "utf8", StringComparison.OrdinalIgnoreCase))
+            {
+                return Encoding.UTF8.GetString(resp.Body);
+            }
+
+            try
+            {
+                return Encoding.GetEncoding(charset).GetString(resp.Body);
+            }
+            catch
+            {
+                // 当前运行时若不支持该编码，回退 UTF-8，避免整个响应解析失败
+                return Encoding.UTF8.GetString(resp.Body);
+            }
         }
     }
 }

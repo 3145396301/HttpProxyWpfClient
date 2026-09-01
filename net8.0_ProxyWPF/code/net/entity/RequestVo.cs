@@ -169,7 +169,9 @@ namespace net8._0_ProxyWPF.code.net.entity
                     case SearchField.ResponseHeaders:
                         return HeadersToText(Session.HttpClient.Response.Headers);
                     case SearchField.ResponseBody:
-                        return Session.HttpClient.Response.HasBody ? Session.HttpClient.Response.BodyString : "";
+                        return Session.HttpClient.Response.HasBody
+                            ? ResponseMessage.DecodeResponseBody(Session.HttpClient.Response)
+                            : "";
                     default:
                         return "";
                 }

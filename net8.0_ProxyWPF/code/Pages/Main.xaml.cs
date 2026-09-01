@@ -980,7 +980,7 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
                     if (response.HasBody)
                     {
                         // 对比简单字串（如果你使用二进制比较可替换）
-                        string existing = response.BodyString ?? string.Empty;
+                        string existing = ResponseMessage.DecodeResponseBody(response) ?? string.Empty;
                         string newBodyStr = System.Text.Encoding.UTF8.GetString(bodyBytes);
                         if (existing != newBodyStr)
                         {
