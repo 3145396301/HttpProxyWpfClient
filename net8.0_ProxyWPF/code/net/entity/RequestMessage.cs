@@ -34,6 +34,7 @@ namespace net8._0_ProxyWPF.code.net.entity
             set
             {
                 SetProperty(ref _reqBody, value);
+                RecomputeIsTruncated();
                 OnPropertyChanged(nameof(AllMessage));
                 OnPropertyChanged(nameof(DisplayMessage));
             }
@@ -51,13 +52,20 @@ namespace net8._0_ProxyWPF.code.net.entity
             }
         }
 
+        private bool _isTruncated;
+
         /// <summary>
         /// 是否因内容过大而被截断展示
         /// </summary>
-        public bool IsTruncated { get; private set; }
+        public bool IsTruncated
+        {
+            get => _isTruncated;
+            private set => SetProperty(ref _isTruncated, value);
+        }
 
         /// <summary>
-        /// 界面展示用文本：内容过大时截断，避免 TextBox 一次性渲染超大文本导致卡顿
+        /// 界面展示用文本：内容过大时截断，避免 TextBox 一次性渲染超大文本导致卡顿。
+        /// 纯读取、不产生副作用，IsTruncated 由 RecomputeIsTruncated 主动维护，避免绑定求值顺序不确定导致 IsTruncated 滞后。
         /// </summary>
         public string DisplayMessage
         {
@@ -66,14 +74,17 @@ namespace net8._0_ProxyWPF.code.net.entity
                 string full = AllMessage;
                 if (full.Length <= MaxDisplayLength)
                 {
-                    IsTruncated = false;
                     return full;
                 }
 
-                IsTruncated = true;
                 return full.Substring(0, MaxDisplayLength)
                        + $"\r\n\r\n[内容过大，已截断显示（{MaxDisplayLength:N0}/{full.Length:N0} 字符），编辑框已切换为只读，请使用下方“编辑完整请求体”按钮修改]";
             }
+        }
+
+        private void RecomputeIsTruncated()
+        {
+            IsTruncated = AllMessage.Length > MaxDisplayLength;
         }
 
         public RequestMessage(SessionEventArgs session):this(session.HttpClient.Request)
