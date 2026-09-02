@@ -63,29 +63,36 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
-      # 框架依赖版：不含 .NET 10 运行时，体积小，但用户需自行安装 .NET 10
-      # 注意：必须发布 .csproj 而非 .sln——对 solution 传 -o 会触发 NETSDK1194，导致两次产物互相覆盖
-      - name: Publish (framework-dependent)
-        run: dotnet publish net8.0_ProxyWPF/net8.0_ProxyWPF.csproj -c ${{ matrix.configuration }} -o publish/framework-dependent
+      # 框架依赖版：不含 .NET 10 运行时，体积小，但用户需自行安装 .NET 10 Desktop Runtime
+      - name: Publish framework-dependent
+        run: dotnet publish net8.0_ProxyWPF/net8.0_ProxyWPF.csproj -c ${{ matrix.configuration }} -f net10.0-windows --self-contained false -o publish/framework-dependent
 
-      # 自包含版：把 win-x64 的 .NET 10 运行时一并打包，解压即用
-      - name: Publish (self-contained win-x64)
-        run: dotnet publish net8.0_ProxyWPF/net8.0_ProxyWPF.csproj -c ${{ matrix.configuration }} -r win-x64 --self-contained true -o publish/self-contained-win-x64
+      # 自包含版：把 win-x64 的 .NET 10 Desktop Runtime 一并打包，解压即用
+      - name: Publish self-contained win-x64
+        run: dotnet publish net8.0_ProxyWPF/net8.0_ProxyWPF.csproj -c ${{ matrix.configuration }} -f net10.0-windows -r win-x64 --self-contained true -o publish/self-contained-win-x64
 
       - name: Create ZIP packages
         shell: pwsh
         run: |
-          $base = "net8.0_ProxyWPF-${{ matrix.configuration }}"
-          Compress-Archive -Path "publish/framework-dependent/*" -DestinationPath "$base.zip" -Force
-          Compress-Archive -Path "publish/self-contained-win-x64/*" -DestinationPath "$base-SelfContained-x64.zip" -Force
+          $frameworkDependent = "ProxyWPF-net10.0-${{ matrix.configuration }}-FrameworkDependent.zip"
+          $selfContained = "ProxyWPF-net10.0-${{ matrix.configuration }}-SelfContained-win-x64.zip"
+          Compress-Archive -Path "publish/framework-dependent/*" -DestinationPath $frameworkDependent -Force
+          Compress-Archive -Path "publish/self-contained-win-x64/*" -DestinationPath $selfContained -Force
 
-      - name: Upload Artifacts
+      # 分开上传，避免 GitHub Actions 页面只显示一个混合 Artifact。
+      - name: Upload framework-dependent artifact
         uses: actions/upload-artifact@v4
         with:
-          name: net8.0_ProxyWPF-${{ matrix.configuration }}
-          path: |
-            net8.0_ProxyWPF-${{ matrix.configuration }}.zip
-            net8.0_ProxyWPF-${{ matrix.configuration }}-SelfContained-x64.zip
+          name: ProxyWPF-net10.0-${{ matrix.configuration }}-FrameworkDependent
+          path: ProxyWPF-net10.0-${{ matrix.configuration }}-FrameworkDependent.zip
+          if-no-files-found: error
+
+      - name: Upload self-contained artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ProxyWPF-net10.0-${{ matrix.configuration }}-SelfContained-win-x64
+          path: ProxyWPF-net10.0-${{ matrix.configuration }}-SelfContained-win-x64.zip
+          if-no-files-found: error
 
       # 推送 v* 标签时自动创建 GitHub Release，同时附上两个 zip
       - name: Create GitHub Release
@@ -93,8 +100,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            net8.0_ProxyWPF-${{ matrix.configuration }}.zip
-            net8.0_ProxyWPF-${{ matrix.configuration }}-SelfContained-x64.zip
+            ProxyWPF-net10.0-${{ matrix.configuration }}-FrameworkDependent.zip
+            ProxyWPF-net10.0-${{ matrix.configuration }}-SelfContained-win-x64.zip
           body_path: CHANGELOG.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

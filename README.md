@@ -133,9 +133,9 @@ net8.0_ProxyWPF/
 项目内置 GitHub Actions 工作流（`.github/workflows/dotnet-desktop.yml`）：
 
 - 推送 `main` 分支或 PR 时自动构建 `Release`；
-- 每次构建同时产出两种 zip 并上传为 Artifact：
-  - `net8.0_ProxyWPF-Release.zip`：框架依赖版，不含运行时，体积小，用户需自行安装 .NET 10；
-  - `net8.0_ProxyWPF-Release-SelfContained-x64.zip`：自包含版，内置 win-x64 的 .NET 10 运行时，解压即用；
+- 每次构建同时产出两种 zip，并分别上传为独立 Artifact：
+  - `ProxyWPF-net10.0-Release-FrameworkDependent.zip`：框架依赖版，不含运行时，体积约为数 MB，用户需自行安装 .NET 10 Desktop Runtime；
+  - `ProxyWPF-net10.0-Release-SelfContained-win-x64.zip`：自包含版，内置 win-x64 的 .NET 10 Desktop Runtime，体积明显更大，解压即用；
 - 推送 `v*` 标签时自动创建 GitHub Release，同时附上两种 zip，说明取自 `CHANGELOG.md`。
 
 ## 更新日志
