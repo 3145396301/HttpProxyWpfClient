@@ -36,6 +36,7 @@
 # For a complete CI/CD sample to get started with GitHub Action workflows for Desktop Applications,
 # refer to https://github.com/microsoft/github-actions-for-desktop-apps
 
+
 name: WPF Build & Package
 
 on:
@@ -62,52 +63,37 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
+      # 框架依赖版：不含 .NET 10 运行时，体积小，但用户需自行安装 .NET 10
+      - name: Publish (framework-dependent)
+        run: dotnet publish net8.0_ProxyWPF.sln -c ${{ matrix.configuration }} -o publish/framework-dependent
 
-      - name: Restore
-        run: msbuild net8.0_ProxyWPF.sln /t:Restore /p:Configuration=${{ matrix.configuration }}
+      # 自包含版：把 win-x64 的 .NET 10 运行时一并打包，解压即用
+      - name: Publish (self-contained win-x64)
+        run: dotnet publish net8.0_ProxyWPF.sln -c ${{ matrix.configuration }} -r win-x64 --self-contained true -o publish/self-contained-win-x64
 
-      - name: Build
-        run: msbuild net8.0_ProxyWPF.sln /p:Configuration=${{ matrix.configuration }}
-
-      # -------- create zip (write to workspace root) --------
-      - name: Create ZIP package
+      - name: Create ZIP packages
         shell: pwsh
         run: |
-          $zipName = "net8.0_ProxyWPF-${{ matrix.configuration }}.zip"
-          $outputZip = Join-Path $env:GITHUB_WORKSPACE $zipName
-          Write-Host "Compressing to: $outputZip"
-          Compress-Archive -Path "net8.0_ProxyWPF\bin\${{ matrix.configuration }}\net10.0-windows\*" -DestinationPath $outputZip -Force
-          Write-Host "ZIP created."
+          $base = "net8.0_ProxyWPF-${{ matrix.configuration }}"
+          Compress-Archive -Path "publish/framework-dependent/*" -DestinationPath "$base.zip" -Force
+          Compress-Archive -Path "publish/self-contained-win-x64/*" -DestinationPath "$base-SelfContained-x64.zip" -Force
 
-      # -------- debug: list zip / workspace to confirm path --------
-      - name: Debug - show ZIP and workspace files
-        shell: pwsh
-        run: |
-          $zipName = "net8.0_ProxyWPF-${{ matrix.configuration }}.zip"
-          $outputZip = Join-Path $env:GITHUB_WORKSPACE $zipName
-          Write-Host "Expect ZIP at: $outputZip"
-          Write-Host "Test-Path => $(Test-Path $outputZip)"
-          Write-Host "Top-level files in workspace:"
-          Get-ChildItem -Path $env:GITHUB_WORKSPACE -File -Force | ForEach-Object { Write-Host $_.FullName }
-          Write-Host "Any zip files (searching workspace):"
-          Get-ChildItem -Path $env:GITHUB_WORKSPACE -Filter "*.zip" -Recurse -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_.FullName }
-
-      # -------- upload artifact (use relative filename) --------
-      - name: Upload Artifact
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: net8.0_ProxyWPF-${{ matrix.configuration }}
-          path: net8.0_ProxyWPF-${{ matrix.configuration }}.zip
+          path: |
+            net8.0_ProxyWPF-${{ matrix.configuration }}.zip
+            net8.0_ProxyWPF-${{ matrix.configuration }}-SelfContained-x64.zip
 
-      # -------- create GitHub Release when a "v*" tag is pushed --------
+      # 推送 v* 标签时自动创建 GitHub Release，同时附上两个 zip
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: net8.0_ProxyWPF-${{ matrix.configuration }}.zip
+          files: |
+            net8.0_ProxyWPF-${{ matrix.configuration }}.zip
+            net8.0_ProxyWPF-${{ matrix.configuration }}-SelfContained-x64.zip
           body_path: CHANGELOG.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
