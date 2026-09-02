@@ -64,12 +64,13 @@ jobs:
           dotnet-version: 10.0.x
 
       # 框架依赖版：不含 .NET 10 运行时，体积小，但用户需自行安装 .NET 10
+      # 注意：必须发布 .csproj 而非 .sln——对 solution 传 -o 会触发 NETSDK1194，导致两次产物互相覆盖
       - name: Publish (framework-dependent)
-        run: dotnet publish net8.0_ProxyWPF.sln -c ${{ matrix.configuration }} -o publish/framework-dependent
+        run: dotnet publish net8.0_ProxyWPF/net8.0_ProxyWPF.csproj -c ${{ matrix.configuration }} -o publish/framework-dependent
 
       # 自包含版：把 win-x64 的 .NET 10 运行时一并打包，解压即用
       - name: Publish (self-contained win-x64)
-        run: dotnet publish net8.0_ProxyWPF.sln -c ${{ matrix.configuration }} -r win-x64 --self-contained true -o publish/self-contained-win-x64
+        run: dotnet publish net8.0_ProxyWPF/net8.0_ProxyWPF.csproj -c ${{ matrix.configuration }} -r win-x64 --self-contained true -o publish/self-contained-win-x64
 
       - name: Create ZIP packages
         shell: pwsh
