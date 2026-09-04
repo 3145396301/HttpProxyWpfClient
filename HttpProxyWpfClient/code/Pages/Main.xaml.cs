@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -1635,15 +1636,19 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
                 Height = 500,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 Owner = Window.GetWindow(this), // 当前窗口作为父窗口
-                ResizeMode = ResizeMode.CanResize
+                ResizeMode = ResizeMode.CanResize,
+                MinWidth = 520,
+                MinHeight = 300
             };
 
-            // 布局
+            // 布局：编辑区 / 搜索面板 / 按钮区
             Grid grid = new Grid { Margin = new Thickness(10) };
             grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
-            // 输入框
+            // 输入框（用 TextBox 自带滚动，不用外层 ScrollViewer 包裹，
+            // 否则 ScrollToLine 操作的是 TextBox 内部滚动条，外层不动导致定位失效）
             TextBox textBox = new TextBox
             {
                 Text = initialText,
@@ -1652,15 +1657,16 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
                 FontFamily = new FontFamily("Consolas"),
                 FontSize = _editBodyFontSize
             };
+            ScrollViewer.SetHorizontalScrollBarVisibility(textBox, ScrollBarVisibility.Auto);
+            ScrollViewer.SetVerticalScrollBarVisibility(textBox, ScrollBarVisibility.Auto);
             textBox.PreviewMouseWheel += EditBodyTextBox_OnPreviewMouseWheel;
-            ScrollViewer scrollViewer = new ScrollViewer
-            {
-                HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
-                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-                Content = textBox
-            };
-            Grid.SetRow(scrollViewer, 0);
-            grid.Children.Add(scrollViewer);
+            Grid.SetRow(textBox, 0);
+            grid.Children.Add(textBox);
+
+            // Ctrl+F 搜索面板（默认隐藏）
+            StackPanel searchPanel = BuildBodySearchPanel(textBox, out TextBox searchInput);
+            Grid.SetRow(searchPanel, 1);
+            grid.Children.Add(searchPanel);
 
             // 按钮区
             StackPanel panel = new StackPanel
@@ -1676,10 +1682,22 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
             panel.Children.Add(okBtn);
             panel.Children.Add(cancelBtn);
 
-            Grid.SetRow(panel, 1);
+            Grid.SetRow(panel, 2);
             grid.Children.Add(panel);
 
             dialog.Content = grid;
+
+            // 挂在 dialog 上，无论焦点在编辑框还是搜索框里，Ctrl+F 都能唤起/聚焦搜索
+            dialog.PreviewKeyDown += (s, args) =>
+            {
+                if (args.Key == Key.F && args.KeyboardDevice.Modifiers == ModifierKeys.Control)
+                {
+                    searchPanel.Visibility = Visibility.Visible;
+                    searchInput.Focus();
+                    searchInput.SelectAll();
+                    args.Handled = true;
+                }
+            };
 
             // 按钮事件
             okBtn.Click += (s, args) =>
@@ -1694,6 +1712,190 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
             };
 
             return dialog.ShowDialog() == true ? textBox.Text : null;
+        }
+
+        /// <summary>
+        /// 一次搜索命中的位置信息，Snippet 供结果列表展示
+        /// </summary>
+        private sealed class BodySearchMatch
+        {
+            public int Start;
+            public int Length;
+            public string Snippet = "";
+
+            public override string ToString() => Snippet;
+        }
+
+        /// <summary>
+        /// 构建"编辑完整响应体"弹窗的搜索面板：包含/正则两种模式，列表展示命中项，点击定位并高亮编辑框内容
+        /// </summary>
+        private StackPanel BuildBodySearchPanel(TextBox bodyTextBox, out TextBox searchInput)
+        {
+            TextBox searchInputLocal = new TextBox { Width = 200, VerticalContentAlignment = VerticalAlignment.Center };
+            searchInput = searchInputLocal;
+            ComboBox modeCombo = new ComboBox { Width = 100, Margin = new Thickness(5, 0, 0, 0) };
+            modeCombo.Items.Add("包含");
+            modeCombo.Items.Add("正则表达式");
+            modeCombo.SelectedIndex = 0;
+
+            Button searchBtn = new Button { Content = "搜索", Width = 60, Margin = new Thickness(5, 0, 0, 0) };
+            TextBlock countTextLocal = new TextBlock
+            {
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(8, 0, 0, 0),
+                MaxWidth = 200,
+                TextTrimming = TextTrimming.CharacterEllipsis
+            };
+            // Dock 右侧固定显示，避免被左侧内容挤出可视区；Padding 清零防止 × 字形被裁切
+            Button closeBtn = new Button
+            {
+                Content = "×",
+                Width = 28,
+                Height = 24,
+                Padding = new Thickness(0),
+                Margin = new Thickness(5, 0, 0, 0),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+
+            StackPanel controlsRow = new StackPanel { Orientation = Orientation.Horizontal };
+            controlsRow.Children.Add(searchInputLocal);
+            controlsRow.Children.Add(modeCombo);
+            controlsRow.Children.Add(searchBtn);
+            controlsRow.Children.Add(countTextLocal);
+
+            DockPanel inputRow = new DockPanel();
+            DockPanel.SetDock(closeBtn, Dock.Right);
+            inputRow.Children.Add(closeBtn);
+            inputRow.Children.Add(controlsRow);
+
+            ListBox resultListLocal = new ListBox
+            {
+                MaxHeight = 150,
+                Margin = new Thickness(0, 5, 0, 0),
+                FontFamily = new FontFamily("Consolas"),
+                HorizontalContentAlignment = HorizontalAlignment.Stretch
+            };
+
+            StackPanel panel = new StackPanel
+            {
+                Orientation = Orientation.Vertical,
+                Margin = new Thickness(0, 8, 0, 0),
+                Visibility = Visibility.Collapsed
+            };
+            panel.Children.Add(inputRow);
+            panel.Children.Add(resultListLocal);
+
+            void RunSearch()
+            {
+                resultListLocal.Items.Clear();
+                countTextLocal.Text = "";
+
+                string pattern = searchInputLocal.Text;
+                if (pattern.Length == 0) return;
+
+                string text = bodyTextBox.Text;
+                List<BodySearchMatch> matches = new List<BodySearchMatch>();
+                try
+                {
+                    if (modeCombo.SelectedIndex == 1)
+                    {
+                        foreach (Match m in Regex.Matches(text, pattern))
+                        {
+                            if (m.Length == 0) continue; // 空匹配无限多，跳过
+                            matches.Add(new BodySearchMatch { Start = m.Index, Length = m.Length });
+                        }
+                    }
+                    else
+                    {
+                        int idx = 0;
+                        while ((idx = text.IndexOf(pattern, idx, StringComparison.Ordinal)) >= 0)
+                        {
+                            matches.Add(new BodySearchMatch { Start = idx, Length = pattern.Length });
+                            idx += pattern.Length;
+                        }
+                    }
+                }
+                catch (ArgumentException)
+                {
+                    countTextLocal.Text = "正则表达式无效";
+                    return;
+                }
+
+                foreach (BodySearchMatch m in matches)
+                {
+                    int contextStart = Math.Max(0, m.Start - 20);
+                    int contextLen = Math.Min(text.Length - contextStart, m.Length + 40);
+                    string snippet = text.Substring(contextStart, contextLen)
+                        .Replace("\r", "").Replace("\n", "⏎").Replace("\t", "⇥");
+                    int line = bodyTextBox.GetLineIndexFromCharacterIndex(m.Start);
+                    m.Snippet = $"L{(line >= 0 ? line + 1 : "?")}  {snippet}";
+                    resultListLocal.Items.Add(m);
+                }
+
+                countTextLocal.Text = $"共 {matches.Count} 个结果";
+            }
+
+            searchBtn.Click += (s, args) => RunSearch();
+            searchInputLocal.KeyDown += (s, args) =>
+            {
+                if (args.Key == Key.Enter)
+                {
+                    RunSearch();
+                    args.Handled = true;
+                }
+                else if (args.Key == Key.Escape)
+                {
+                    panel.Visibility = Visibility.Collapsed;
+                    bodyTextBox.Focus();
+                    args.Handled = true;
+                }
+            };
+            modeCombo.KeyDown += (s, args) =>
+            {
+                if (args.Key == Key.Enter) RunSearch();
+            };
+
+            // 点击命中项：滚动到对应行并高亮选中，焦点切回编辑框
+            void LocateMatch(BodySearchMatch m)
+            {
+                bodyTextBox.Focus();
+                bodyTextBox.Select(m.Start, m.Length);
+                int line = bodyTextBox.GetLineIndexFromCharacterIndex(m.Start);
+                if (line >= 0) bodyTextBox.ScrollToLine(line);
+
+                // 命中位置可能在横向滚动可视区外，把匹配段起点滚动到左侧留 20px 余量
+                Rect rect = bodyTextBox.GetRectFromCharacterIndex(m.Start, false);
+                if (rect != Rect.Empty &&
+                    bodyTextBox.Template.FindName("PART_ContentHost", bodyTextBox) is ScrollViewer sv)
+                {
+                    sv.ScrollToHorizontalOffset(Math.Max(0, sv.HorizontalOffset + rect.Left - 20));
+                }
+            }
+
+            resultListLocal.SelectionChanged += (s, args) =>
+            {
+                if (resultListLocal.SelectedItem is BodySearchMatch m) LocateMatch(m);
+            };
+            // 重复点击同一项不会触发 SelectionChanged，用鼠标事件兜底
+            resultListLocal.PreviewMouseLeftButtonUp += (s, args) =>
+            {
+                if (resultListLocal.SelectedItem is BodySearchMatch m) LocateMatch(m);
+            };
+
+            closeBtn.Click += (s, args) =>
+            {
+                panel.Visibility = Visibility.Collapsed;
+                bodyTextBox.Focus();
+            };
+
+            // 编辑内容变化后旧的命中位置失效，清空结果避免定位到错误位置
+            bodyTextBox.TextChanged += (s, args) =>
+            {
+                resultListLocal.Items.Clear();
+                countTextLocal.Text = "";
+            };
+
+            return panel;
         }
 
         public void ResetProxy(string proxyHost = null, int? proxyPort = null, string? upstreamIp = null,
