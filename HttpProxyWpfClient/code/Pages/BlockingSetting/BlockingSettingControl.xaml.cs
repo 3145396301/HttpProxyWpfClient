@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
+using HttpProxyWpfClient.code.Loc;
 using HttpProxyWpfClient.code.net.entity;
 
 namespace HttpProxyWpfClient.code.Pages.BlockingSetting;
@@ -48,7 +49,7 @@ public partial class BlockingSettingControl : UserControl
     {
         if (sender is Button { DataContext: RuleGroupVo groupVo })
         {
-            groupVo.Rules.Add(new RequestMatchVo { Name = "新规则" });
+            groupVo.Rules.Add(new RequestMatchVo { Name = LocalizationManager.GetString("NewRule") });
         }
     }
 

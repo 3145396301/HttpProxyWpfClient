@@ -2,45 +2,121 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
 
-    <sys:String x:Key="Hello">안녕하세요</sys:String>
-    <sys:String x:Key="Exit">종료</sys:String>
-    <sys:String x:Key="Title">설절</sys:String>
-    <sys:String x:Key="ShearManagement">클립보드 관리</sys:String>
-    <sys:String x:Key="Shear">클립보드</sys:String>
-    <sys:String x:Key="Face">이모지</sys:String>
-    <sys:String x:Key="New">새로 만들기</sys:String>
-    <sys:String x:Key="About">정보</sys:String>
-    <sys:String x:Key="Index">번호</sys:String>
-    <sys:String x:Key="Name">이름</sys:String>
-    <sys:String x:Key="Type">유형</sys:String>
-    <sys:String x:Key="Content">내용</sys:String>
+    <!-- 탐색 / 창 -->
+    <sys:String x:Key="HomePage">홈</sys:String>
     <sys:String x:Key="Setting">설정</sys:String>
-    <sys:String x:Key="Language">언어</sys:String>
-    <sys:String x:Key="Theme">테마</sys:String>
-    <sys:String x:Key="Font">글꼴</sys:String>
-    <sys:String x:Key="FontSize">글자 크기</sys:String>
-    <sys:String x:Key="FontColor">글자 색상</sys:String>
-    <sys:String x:Key="FontBackgroundColor">글자 배경색</sys:String>
-    <sys:String x:Key="User">사용자</sys:String>
-    <sys:String x:Key="Password">비밀번호</sys:String>
-    <sys:String x:Key="Login">로그인</sys:String>
-    <sys:String x:Key="Logout">로그아웃</sys:String>
-    <sys:String x:Key="Register">등록</sys:String>
-    <sys:String x:Key="UserName">사용자 이름</sys:String>
-    <sys:String x:Key="ConfirmPassword">비밀번호 확인</sys:String>
-    <sys:String x:Key="UserManagement">사용자 관리</sys:String>
-    <sys:String x:Key="Platform">플랫폼</sys:String>
-    <sys:String x:Key="PasswordBook">비밀번호 책</sys:String>
-    <sys:String x:Key="AddNewPassword">새 비밀번호 추가</sys:String>
-    <sys:String x:Key="MyPassword">내 비밀번호</sys:String>
-    <sys:String x:Key="Search">검색</sys:String>
-    <sys:String x:Key="Remark">비고</sys:String>
-    <sys:String x:Key="Copy">복사</sys:String>
-    <sys:String x:Key="Delete">삭제</sys:String>
-    <sys:String x:Key="Modify">수정</sys:String>
-    <sys:String x:Key="Generate">생성</sys:String>
-    <sys:String x:Key="GeneratePassword">비밀번호 생성</sys:String>
-    <sys:String x:Key="UserNameInputPrompt">사용자 이름/이메일/...</sys:String>
+    <sys:String x:Key="Minimize">최소화</sys:String>
+    <sys:String x:Key="Maximize">최대화</sys:String>
+    <sys:String x:Key="Restore">복원</sys:String>
+    <sys:String x:Key="Close">닫기</sys:String>
 
-    <sys:String x:Key="Save">저장</sys:String>
+    <!-- 세션 목록 열 -->
+    <sys:String x:Key="Host">호스트</sys:String>
+    <sys:String x:Key="Port">포트</sys:String>
+    <sys:String x:Key="Method">메서드</sys:String>
+    <sys:String x:Key="Path">경로</sys:String>
+    <sys:String x:Key="Protocol">프로토콜</sys:String>
+    <sys:String x:Key="Upstream">업스트림</sys:String>
+    <sys:String x:Key="Downstream">다운스트림</sys:String>
+    <sys:String x:Key="ResponseType">응답 유형</sys:String>
+    <sys:String x:Key="ResponseLength">응답 길이</sys:String>
+
+    <!-- 메인 도구 모음 -->
+    <sys:String x:Key="Intercept">가로채기</sys:String>
+    <sys:String x:Key="ReleaseAll">모두 해제</sys:String>
+    <sys:String x:Key="OnlyShowIntercepted">가로챈 요청만 표시</sys:String>
+    <sys:String x:Key="DiscardNonIntercepted">가로채지 않은 요청 삭제</sys:String>
+    <sys:String x:Key="SearchWithShortcut">검색 (Ctrl+F)</sys:String>
+    <sys:String x:Key="Research">다시 검색</sys:String>
+
+    <!-- 세부 정보 창 -->
+    <sys:String x:Key="RequestContent">요청 내용</sys:String>
+    <sys:String x:Key="ResponseContent">응답 내용</sys:String>
+    <sys:String x:Key="Release">해제</sys:String>
+    <sys:String x:Key="EditFullRequestBody">전체 요청 본문 편집</sys:String>
+    <sys:String x:Key="EditFullResponseBody">전체 응답 본문 편집</sys:String>
+    <sys:String x:Key="QuickModifyRequestBody">요청 본문 빠른 수정</sys:String>
+    <sys:String x:Key="InputRequestBody">요청 본문 입력</sys:String>
+
+    <!-- 마우스 오른쪽 클릭 메뉴 -->
+    <sys:String x:Key="CopyAsCurl">curl로 복사</sys:String>
+    <sys:String x:Key="PreviewImage">이미지 미리보기</sys:String>
+    <sys:String x:Key="ReplaceImage">이미지 교체</sys:String>
+
+    <!-- 검색 사이드바 -->
+    <sys:String x:Key="SearchScope">검색 범위:</sys:String>
+    <sys:String x:Key="EnableRegex">정규 표현식 사용</sys:String>
+    <sys:String x:Key="SearchFieldHost">도메인</sys:String>
+    <sys:String x:Key="SearchFieldMethod">메서드</sys:String>
+    <sys:String x:Key="SearchFieldStatusCode">상태 코드</sys:String>
+    <sys:String x:Key="SearchFieldRequestHeaders">요청 헤더</sys:String>
+    <sys:String x:Key="SearchFieldRequestBody">요청 본문</sys:String>
+    <sys:String x:Key="SearchFieldResponseHeaders">응답 헤더</sys:String>
+    <sys:String x:Key="SearchFieldResponseBody">응답 본문</sys:String>
+    <sys:String x:Key="Contains">포함</sys:String>
+    <sys:String x:Key="RegexMode">정규 표현식</sys:String>
+    <sys:String x:Key="Search">검색</sys:String>
+    <sys:String x:Key="InvalidRegex">정규 표현식이 잘못되었습니다</sys:String>
+    <sys:String x:Key="SearchResultCount">결과 {0}개</sys:String>
+
+    <!-- 공통 대화 상자 -->
+    <sys:String x:Key="Ok">확인</sys:String>
+    <sys:String x:Key="Cancel">취소</sys:String>
+    <sys:String x:Key="Confirm">확인</sys:String>
+    <sys:String x:Key="AddInterceptRule">가로채기 규칙 추가</sys:String>
+    <sys:String x:Key="CannotLocate">위치를 찾을 수 없음</sys:String>
+    <sys:String x:Key="ForceDisplay">강제 표시</sys:String>
+    <sys:String x:Key="ForceDisplayPrompt">전체 내용을 강제로 표시하면 UI가 멈출 수 있습니다. 계속하시겠습니까?</sys:String>
+    <sys:String x:Key="TruncatedMatchPrompt">일치 항목이 크기 초과로 잘린 부분에 있어 현재 편집기에서 위치를 찾을 수 없습니다.&#10;&#10;"강제 표시"를 클릭하면 전체 내용을 로드하고 일치 위치로 이동합니다.&#10;매우 큰 텍스트 렌더링으로 UI가 멈출 수 있습니다. 이 알림을 닫고 아래의 "전체 요청/응답 본문 편집" 버튼을 사용할 수도 있습니다.</sys:String>
+    <sys:String x:Key="RequestIncomplete">요청 미완료</sys:String>
+    <sys:String x:Key="RequestIncompletePrefix">요청 미완료: {0}</sys:String>
+
+    <!-- 잘림 / 오류 메시지 -->
+    <sys:String x:Key="ContentTruncated">[내용이 너무 커서 표시가 잘렸습니다({0}/{1}자). 편집기는 읽기 전용입니다. 아래 "{2}" 버튼으로 수정하세요]</sys:String>
+    <sys:String x:Key="ResponseBodyNotReady">응답 본문이 아직 완전히 수신 또는 파싱되지 않았습니다. 잠시 후 세션을 다시 전환해 보세요.</sys:String>
+    <sys:String x:Key="NoValidResponse">프록시가 유효한 응답을 받지 못했습니다. 연결 설정 또는 전송 중에 중단되었을 수 있습니다(인증서 검증 실패, 연결 재설정, 시간 초과 등).</sys:String>
+
+    <!-- 설정 페이지 -->
+    <sys:String x:Key="Language">언어</sys:String>
+    <sys:String x:Key="ProxySetting">프록시 설정</sys:String>
+    <sys:String x:Key="ProxyControl">프록시 제어</sys:String>
+    <sys:String x:Key="RefreshProxyNow">프록시 설정 즉시 새로 고침</sys:String>
+    <sys:String x:Key="CloseProxy">프록시 중지</sys:String>
+    <sys:String x:Key="LocalProxySetting">로컬 프록시 설정</sys:String>
+    <sys:String x:Key="UpstreamProxySetting">업스트림 프록시 설정</sys:String>
+    <sys:String x:Key="ProxyAddress">프록시 주소:</sys:String>
+    <sys:String x:Key="ProxyPort">프록시 포트:</sys:String>
+    <sys:String x:Key="EnableUpstream">업스트림 프록시 사용:</sys:String>
+
+    <!-- 가로채기 규칙 설정 -->
+    <sys:String x:Key="GroupName">그룹 이름</sys:String>
+    <sys:String x:Key="GroupNamePlaceholder">그룹 이름을 입력하세요</sys:String>
+    <sys:String x:Key="AddGroup">그룹 추가</sys:String>
+    <sys:String x:Key="RuleGroups">가로채기 규칙 그룹</sys:String>
+    <sys:String x:Key="Enable">사용</sys:String>
+    <sys:String x:Key="AddRule">규칙 추가</sys:String>
+    <sys:String x:Key="DeleteGroup">그룹 삭제</sys:String>
+    <sys:String x:Key="NewRule">새 규칙</sys:String>
+    <sys:String x:Key="NameLabel">이름:</sys:String>
+    <sys:String x:Key="DomainLabel">도메인:</sys:String>
+    <sys:String x:Key="DomainPlaceholder">예: example.com</sys:String>
+    <sys:String x:Key="Regex">정규식</sys:String>
+    <sys:String x:Key="UrlPlaceholder">전체 URL 일치</sys:String>
+    <sys:String x:Key="MethodLabel">메서드:</sys:String>
+    <sys:String x:Key="MethodPlaceholder">예: GET / POST, 비워 두면 제한 없음</sys:String>
+    <sys:String x:Key="InterceptPhase">가로채기 단계:</sys:String>
+    <sys:String x:Key="InterceptRequestPhase">업스트림 가로채기(요청)</sys:String>
+    <sys:String x:Key="InterceptResponsePhase">다운스트림 가로채기(응답)</sys:String>
+    <sys:String x:Key="RequestHeaderRules">요청 헤더 규칙</sys:String>
+    <sys:String x:Key="AddRequestHeader">요청 헤더 추가</sys:String>
+    <sys:String x:Key="HeaderNamePlaceholder">헤더 이름</sys:String>
+    <sys:String x:Key="HeaderValuePlaceholder">헤더 값</sys:String>
+    <sys:String x:Key="Delete">삭제</sys:String>
+    <sys:String x:Key="DeleteRule">규칙 삭제</sys:String>
+
+    <!-- 이미지 기능 -->
+    <sys:String x:Key="ImageDecodeFailed">이미지 디코딩에 실패했습니다. 손상되었거나 지원되지 않는 형식일 수 있습니다</sys:String>
+    <sys:String x:Key="ImageReplaceFailed">응답 이미지 교체 실패: </sys:String>
+    <sys:String x:Key="AllSupportedImageFormats">지원되는 모든 형식</sys:String>
+
 </ResourceDictionary>

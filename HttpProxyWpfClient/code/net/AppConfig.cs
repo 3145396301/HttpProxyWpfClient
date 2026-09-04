@@ -37,6 +37,11 @@ public class AppConfig
     /// 会话列表各列的显隐与宽度（右键表头可调整）
     /// </summary>
     public List<SessionColumnSetting> SessionColumns { get; set; } = new();
+
+    /// <summary>
+    /// 界面语言（CultureName，如 zh-CN / en-US / ja-JP / ko-KR），启动时据此恢复语言
+    /// </summary>
+    public string Language { get; set; } = "zh-CN";
 }
 
 /// <summary>

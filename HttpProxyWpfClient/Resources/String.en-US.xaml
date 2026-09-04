@@ -1,5 +1,122 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
-    <sys:String x:Key="Password"></sys:String>
+
+    <!-- Navigation / Window -->
+    <sys:String x:Key="HomePage">Home</sys:String>
+    <sys:String x:Key="Setting">Settings</sys:String>
+    <sys:String x:Key="Minimize">Minimize</sys:String>
+    <sys:String x:Key="Maximize">Maximize</sys:String>
+    <sys:String x:Key="Restore">Restore</sys:String>
+    <sys:String x:Key="Close">Close</sys:String>
+
+    <!-- Session list columns -->
+    <sys:String x:Key="Host">Host</sys:String>
+    <sys:String x:Key="Port">Port</sys:String>
+    <sys:String x:Key="Method">Method</sys:String>
+    <sys:String x:Key="Path">Path</sys:String>
+    <sys:String x:Key="Protocol">Protocol</sys:String>
+    <sys:String x:Key="Upstream">Up</sys:String>
+    <sys:String x:Key="Downstream">Down</sys:String>
+    <sys:String x:Key="ResponseType">Response Type</sys:String>
+    <sys:String x:Key="ResponseLength">Response Length</sys:String>
+
+    <!-- Main toolbar -->
+    <sys:String x:Key="Intercept">Intercept</sys:String>
+    <sys:String x:Key="ReleaseAll">Release All</sys:String>
+    <sys:String x:Key="OnlyShowIntercepted">Show intercepted requests only</sys:String>
+    <sys:String x:Key="DiscardNonIntercepted">Discard non-intercepted requests</sys:String>
+    <sys:String x:Key="SearchWithShortcut">Search (Ctrl+F)</sys:String>
+    <sys:String x:Key="Research">Search Again</sys:String>
+
+    <!-- Detail panes -->
+    <sys:String x:Key="RequestContent">Request</sys:String>
+    <sys:String x:Key="ResponseContent">Response</sys:String>
+    <sys:String x:Key="Release">Release</sys:String>
+    <sys:String x:Key="EditFullRequestBody">Edit Full Request Body</sys:String>
+    <sys:String x:Key="EditFullResponseBody">Edit Full Response Body</sys:String>
+    <sys:String x:Key="QuickModifyRequestBody">Quick Modify Request Body</sys:String>
+    <sys:String x:Key="InputRequestBody">Enter Request Body</sys:String>
+
+    <!-- Context menu -->
+    <sys:String x:Key="CopyAsCurl">Copy as curl</sys:String>
+    <sys:String x:Key="PreviewImage">Preview Image</sys:String>
+    <sys:String x:Key="ReplaceImage">Replace Image</sys:String>
+
+    <!-- Search sidebar -->
+    <sys:String x:Key="SearchScope">Search scope:</sys:String>
+    <sys:String x:Key="EnableRegex">Enable regular expressions</sys:String>
+    <sys:String x:Key="SearchFieldHost">Host</sys:String>
+    <sys:String x:Key="SearchFieldMethod">Method</sys:String>
+    <sys:String x:Key="SearchFieldStatusCode">Status Code</sys:String>
+    <sys:String x:Key="SearchFieldRequestHeaders">Request Headers</sys:String>
+    <sys:String x:Key="SearchFieldRequestBody">Request Body</sys:String>
+    <sys:String x:Key="SearchFieldResponseHeaders">Response Headers</sys:String>
+    <sys:String x:Key="SearchFieldResponseBody">Response Body</sys:String>
+    <sys:String x:Key="Contains">Contains</sys:String>
+    <sys:String x:Key="RegexMode">Regular expression</sys:String>
+    <sys:String x:Key="Search">Search</sys:String>
+    <sys:String x:Key="InvalidRegex">Invalid regular expression</sys:String>
+    <sys:String x:Key="SearchResultCount">{0} result(s)</sys:String>
+
+    <!-- Common dialogs -->
+    <sys:String x:Key="Ok">OK</sys:String>
+    <sys:String x:Key="Cancel">Cancel</sys:String>
+    <sys:String x:Key="Confirm">Confirm</sys:String>
+    <sys:String x:Key="AddInterceptRule">Add Intercept Rules</sys:String>
+    <sys:String x:Key="CannotLocate">Cannot Locate</sys:String>
+    <sys:String x:Key="ForceDisplay">Force Display</sys:String>
+    <sys:String x:Key="ForceDisplayPrompt">Displaying the full content may freeze the UI. Continue?</sys:String>
+    <sys:String x:Key="TruncatedMatchPrompt">The match is in the truncated portion of an oversized message and cannot be located in the editor.&#10;&#10;Click "Force Display" to load the full content and jump to the match.&#10;Rendering very large text may freeze the UI; you can also close this prompt and use the "Edit Full Request/Response Body" button below.</sys:String>
+    <sys:String x:Key="RequestIncomplete">Request Incomplete</sys:String>
+    <sys:String x:Key="RequestIncompletePrefix">Request incomplete: {0}</sys:String>
+
+    <!-- Truncation / error messages -->
+    <sys:String x:Key="ContentTruncated">[Content too large, display truncated ({0}/{1} chars). The editor is read-only; use the "{2}" button below to modify]</sys:String>
+    <sys:String x:Key="ResponseBodyNotReady">The response body has not been fully received or parsed yet. Try switching sessions again later.</sys:String>
+    <sys:String x:Key="NoValidResponse">The proxy received no valid response; the connection may have been interrupted during establishment or transfer (e.g. certificate validation failure, connection reset or timeout).</sys:String>
+
+    <!-- Settings page -->
+    <sys:String x:Key="Language">Language</sys:String>
+    <sys:String x:Key="ProxySetting">Proxy Settings</sys:String>
+    <sys:String x:Key="ProxyControl">Proxy Control</sys:String>
+    <sys:String x:Key="RefreshProxyNow">Refresh Proxy Settings Now</sys:String>
+    <sys:String x:Key="CloseProxy">Stop Proxy</sys:String>
+    <sys:String x:Key="LocalProxySetting">Local Proxy Settings</sys:String>
+    <sys:String x:Key="UpstreamProxySetting">Upstream Proxy Settings</sys:String>
+    <sys:String x:Key="ProxyAddress">Proxy address:</sys:String>
+    <sys:String x:Key="ProxyPort">Proxy port:</sys:String>
+    <sys:String x:Key="EnableUpstream">Enable upstream proxy:</sys:String>
+
+    <!-- Intercept rule settings -->
+    <sys:String x:Key="GroupName">Group name</sys:String>
+    <sys:String x:Key="GroupNamePlaceholder">Enter a group name</sys:String>
+    <sys:String x:Key="AddGroup">Add Group</sys:String>
+    <sys:String x:Key="RuleGroups">Intercept Rule Groups</sys:String>
+    <sys:String x:Key="Enable">Enable</sys:String>
+    <sys:String x:Key="AddRule">Add Rule</sys:String>
+    <sys:String x:Key="DeleteGroup">Delete Group</sys:String>
+    <sys:String x:Key="NewRule">New rule</sys:String>
+    <sys:String x:Key="NameLabel">Name:</sys:String>
+    <sys:String x:Key="DomainLabel">Domain:</sys:String>
+    <sys:String x:Key="DomainPlaceholder">e.g. example.com</sys:String>
+    <sys:String x:Key="Regex">Regex</sys:String>
+    <sys:String x:Key="UrlPlaceholder">Match full URL</sys:String>
+    <sys:String x:Key="MethodLabel">Method:</sys:String>
+    <sys:String x:Key="MethodPlaceholder">e.g. GET / POST, empty means no limit</sys:String>
+    <sys:String x:Key="InterceptPhase">Intercept phase:</sys:String>
+    <sys:String x:Key="InterceptRequestPhase">Upstream intercept (request)</sys:String>
+    <sys:String x:Key="InterceptResponsePhase">Downstream intercept (response)</sys:String>
+    <sys:String x:Key="RequestHeaderRules">Request Header Rules</sys:String>
+    <sys:String x:Key="AddRequestHeader">Add Request Header</sys:String>
+    <sys:String x:Key="HeaderNamePlaceholder">Header name</sys:String>
+    <sys:String x:Key="HeaderValuePlaceholder">Header value</sys:String>
+    <sys:String x:Key="Delete">Delete</sys:String>
+    <sys:String x:Key="DeleteRule">Delete Rule</sys:String>
+
+    <!-- Image features -->
+    <sys:String x:Key="ImageDecodeFailed">Failed to decode image. It may be corrupted or in an unsupported format</sys:String>
+    <sys:String x:Key="ImageReplaceFailed">Failed to replace response image: </sys:String>
+    <sys:String x:Key="AllSupportedImageFormats">All supported formats</sys:String>
+
 </ResourceDictionary>

@@ -10,6 +10,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using ICSharpCode.AvalonEdit;
+using HttpProxyWpfClient.code.Loc;
 using HttpProxyWpfClient.code.net;
 using HttpProxyWpfClient.code.net.entity;
 using HttpProxyWpfClient.code.Pages.BlockingSetting;
@@ -225,8 +226,8 @@ namespace HttpProxyWpfClient.code.Pages
                 return;
             }
 
-            var confirm = MessageBox.Show("强制展示完整内容可能造成界面卡顿，是否继续？",
-                "确认", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            var confirm = MessageBox.Show(LocalizationManager.GetString("ForceDisplayPrompt"),
+                LocalizationManager.GetString("Confirm"), MessageBoxButton.YesNo, MessageBoxImage.Warning);
             if (confirm != MessageBoxResult.Yes)
             {
                 return;
@@ -280,9 +281,7 @@ namespace HttpProxyWpfClient.code.Pages
             var panel = new StackPanel { Margin = new Thickness(15) };
             panel.Children.Add(new TextBlock
             {
-                Text = "命中内容位于超长文本被截断的部分，当前编辑框无法定位到该位置。\n\n" +
-                       "点击“强制展示”将在编辑框中加载完整内容并定位到命中位置；\n" +
-                       "超大文本渲染可能导致界面卡顿，也可以关闭本提示，改用下方“编辑完整请求体/响应体”按钮查看。",
+                Text = LocalizationManager.GetString("TruncatedMatchPrompt"),
                 TextWrapping = TextWrapping.Wrap,
                 Margin = new Thickness(0, 0, 0, 15)
             });
@@ -292,8 +291,8 @@ namespace HttpProxyWpfClient.code.Pages
                 Orientation = Orientation.Horizontal,
                 HorizontalAlignment = HorizontalAlignment.Right
             };
-            var cancelBtn = new Button { Content = "取消", Width = 75, Margin = new Thickness(5, 0, 0, 0) };
-            var forceBtn = new Button { Content = "强制展示", Width = 90, Margin = new Thickness(5, 0, 0, 0) };
+            var cancelBtn = new Button { Content = LocalizationManager.GetString("Cancel"), Width = 75, Margin = new Thickness(5, 0, 0, 0) };
+            var forceBtn = new Button { Content = LocalizationManager.GetString("ForceDisplay"), Width = 90, Margin = new Thickness(5, 0, 0, 0) };
             buttonPanel.Children.Add(cancelBtn);
             buttonPanel.Children.Add(forceBtn);
             panel.Children.Add(buttonPanel);
@@ -301,7 +300,7 @@ namespace HttpProxyWpfClient.code.Pages
             forceBtn.Click += (s, e) => DialogHelper.CloseWithResult<bool>(Window.GetWindow(forceBtn), true);
             cancelBtn.Click += (s, e) => DialogHelper.CloseWithResult<bool>(Window.GetWindow(cancelBtn), false);
 
-            var dialogTask = DialogHelper.ShowDialogAsync<bool>("无法定位", panel, true, 500, 240);
+            var dialogTask = DialogHelper.ShowDialogAsync<bool>(LocalizationManager.GetString("CannotLocate"), panel, true, 500, 240);
             return dialogTask.GetAwaiter().GetResult() == true;
         }
 
@@ -519,6 +518,7 @@ namespace HttpProxyWpfClient.code.Pages
             ApplyRequestFontSize(config.RequestContentFontSize);
             ApplyResponseFontSize(config.ResponseContentFontSize);
             _editBodyFontSize = Math.Clamp(config.EditBodyFontSize, ContentFontSizeMin, ContentFontSizeMax);
+            _languageSetting = config.Language;
 
             proxyConnect = new ProxyConnect()
             {
@@ -535,6 +535,24 @@ namespace HttpProxyWpfClient.code.Pages
             proxyConnect.CreateProxyServer();
             proxyConnect.StartProxy();
             proxyConnect.SettingSystemProxy();
+
+            // 语言切换后重建当前会话的展示对象，使截断提示/错误文本等代码侧文本跟随新语言
+            LocalizationManager.LanguageChanged += OnLanguageChanged;
+        }
+
+        /// <summary>
+        /// 语言切换时刷新选中会话的消息对象（截断提示、错误文本在构造时取词，需重建才会换语言）
+        /// </summary>
+        private void OnLanguageChanged()
+        {
+            this.Dispatcher.BeginInvoke(() =>
+            {
+                if (SelectedSession != null)
+                {
+                    this.RequestMessage = new RequestMessage(SelectedSession.Session);
+                    this.ResponseMessage = new ResponseMessage(SelectedSession.Session);
+                }
+            });
         }
 
         /// <summary>
@@ -643,7 +661,7 @@ namespace HttpProxyWpfClient.code.Pages
         private void block_OnClick(object sender, RoutedEventArgs e)
         {
             BlockingSettingControl blockingSettingControl = new BlockingSettingControl(Groups);
-            DialogHelper.ShowDialogAsync<bool>("添加拦截规则",blockingSettingControl,true,900D,600D,onClose: w =>
+            DialogHelper.ShowDialogAsync<bool>(LocalizationManager.GetString("AddInterceptRule"),blockingSettingControl,true,900D,600D,onClose: w =>
             {
                 blockingSettingControl.UpdateGroups();
                 SaveConfig();
@@ -708,17 +726,42 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
         }
 
         /// <summary>
-        /// 右键表头时取消默认上下文菜单，改为弹出列显隐菜单
+        /// 右键行时按选中会话控制图片预览/替换菜单项可见性；右键表头时取消默认上下文菜单，改为弹出列显隐菜单
         /// </summary>
         private void SessionList_OnContextMenuOpening(object sender, ContextMenuEventArgs e)
         {
             if (FindVisualParent<GridViewColumnHeader>(e.OriginalSource as DependencyObject) == null)
             {
+                UpdateImageMenuVisibility();
                 return;
             }
 
             e.Handled = true;
             ShowColumnVisibilityMenu();
+        }
+
+        /// <summary>
+        /// 响应为图片且 body 非空时显示"预览图片"；响应阶段拦截中再显示"替换图片"。
+        /// 读取 body 前先用 HasBody 判断，避免响应尚未到达时误显示。
+        /// </summary>
+        private void UpdateImageMenuVisibility()
+        {
+            bool hasImageBody = false;
+            bool blocking = false;
+            RequestVo session = SelectedSession;
+            if (session != null && session.IsImageResponse)
+            {
+                Response response = session.Session.HttpClient.Response;
+                hasImageBody = response != null
+                    && response.HasBody
+                    && response.Body is { Length: > 0 };
+                blocking = session.Blocking;
+            }
+
+            MenuPreviewImage.Visibility = hasImageBody ? Visibility.Visible : Visibility.Collapsed;
+            MenuReplaceImage.Visibility = hasImageBody && blocking
+                ? Visibility.Visible
+                : Visibility.Collapsed;
         }
 
         /// <summary>
@@ -780,7 +823,7 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
 
         private void ModifyRequestBody_OnClick(object sender, RoutedEventArgs e)
         {
-            string? result = ShowBodyEditDialog("输入请求体", "");
+            string? result = ShowBodyEditDialog(LocalizationManager.GetString("InputRequestBody"), "");
             if (result != null)
             {
                 RequestMessage!.ReqBody = result;
@@ -795,7 +838,7 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
         {
             if (RequestMessage == null) return;
 
-            string? result = ShowBodyEditDialog("编辑完整请求体", RequestMessage.ReqBody ?? "");
+            string? result = ShowBodyEditDialog(LocalizationManager.GetString("EditFullRequestBody"), RequestMessage.ReqBody ?? "");
             if (result != null)
             {
                 RequestMessage.ReqBody = result;
@@ -810,7 +853,7 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
         {
             if (ResponseMessage == null) return;
 
-            string? result = ShowBodyEditDialog("编辑完整响应体", ResponseMessage.RespBody ?? "");
+            string? result = ShowBodyEditDialog(LocalizationManager.GetString("EditFullResponseBody"), ResponseMessage.RespBody ?? "");
             if (result != null)
             {
                 ResponseMessage.RespBody = result;
@@ -870,8 +913,8 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
                 Margin = new Thickness(0, 10, 0, 0)
             };
 
-            Button okBtn = new Button { Content = "确定", Width = 75, Margin = new Thickness(5) };
-            Button cancelBtn = new Button { Content = "取消", Width = 75, Margin = new Thickness(5) };
+            Button okBtn = new Button { Content = LocalizationManager.GetString("Ok"), Width = 75, Margin = new Thickness(5) };
+            Button cancelBtn = new Button { Content = LocalizationManager.GetString("Cancel"), Width = 75, Margin = new Thickness(5) };
 
             panel.Children.Add(okBtn);
             panel.Children.Add(cancelBtn);
@@ -928,11 +971,11 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
             TextBox searchInputLocal = new TextBox { Width = 200, VerticalContentAlignment = VerticalAlignment.Center };
             searchInput = searchInputLocal;
             ComboBox modeCombo = new ComboBox { Width = 100, Margin = new Thickness(5, 0, 0, 0) };
-            modeCombo.Items.Add("包含");
-            modeCombo.Items.Add("正则表达式");
+            modeCombo.Items.Add(LocalizationManager.GetString("Contains"));
+            modeCombo.Items.Add(LocalizationManager.GetString("RegexMode"));
             modeCombo.SelectedIndex = 0;
 
-            Button searchBtn = new Button { Content = "搜索", Width = 60, Margin = new Thickness(5, 0, 0, 0) };
+            Button searchBtn = new Button { Content = LocalizationManager.GetString("Search"), Width = 60, Margin = new Thickness(5, 0, 0, 0) };
             TextBlock countTextLocal = new TextBlock
             {
                 VerticalAlignment = VerticalAlignment.Center,
@@ -1011,7 +1054,7 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
                 }
                 catch (ArgumentException)
                 {
-                    countTextLocal.Text = "正则表达式无效";
+                    countTextLocal.Text = LocalizationManager.GetString("InvalidRegex");
                     return;
                 }
 
@@ -1026,7 +1069,7 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
                     resultListLocal.Items.Add(m);
                 }
 
-                countTextLocal.Text = $"共 {matches.Count} 个结果";
+                countTextLocal.Text = string.Format(LocalizationManager.GetString("SearchResultCount"), matches.Count);
             }
 
             searchBtn.Click += (s, args) => RunSearch();

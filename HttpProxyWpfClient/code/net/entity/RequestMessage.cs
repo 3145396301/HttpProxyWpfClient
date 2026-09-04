@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Text;
 using HttpProxyWpfClient.code.@base;
+using HttpProxyWpfClient.code.Loc;
 using Titanium.Web.Proxy.EventArguments;
 using Titanium.Web.Proxy.Http;
 using Titanium.Web.Proxy.Models;
@@ -78,7 +79,10 @@ namespace HttpProxyWpfClient.code.net.entity
                 }
 
                 return full.Substring(0, MaxDisplayLength)
-                       + $"\r\n\r\n[内容过大，已截断显示（{MaxDisplayLength:N0}/{full.Length:N0} 字符），编辑框已切换为只读，请使用下方“编辑完整请求体”按钮修改]";
+                       + "\r\n\r\n"
+                       + string.Format(LocalizationManager.GetString("ContentTruncated"),
+                           MaxDisplayLength.ToString("N0"), full.Length.ToString("N0"),
+                           LocalizationManager.GetString("EditFullRequestBody"));
             }
         }
 

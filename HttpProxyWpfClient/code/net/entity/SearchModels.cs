@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using HttpProxyWpfClient.code.Loc;
 
 namespace HttpProxyWpfClient.code.net.entity
 {
@@ -43,14 +44,14 @@ namespace HttpProxyWpfClient.code.net.entity
 
         public string FieldDisplayName => Field switch
         {
-            SearchField.Host => "域名",
+            SearchField.Host => LocalizationManager.GetString("SearchFieldHost"),
             SearchField.Url => "URL",
-            SearchField.Method => "方法",
-            SearchField.StatusCode => "状态码",
-            SearchField.RequestHeaders => "请求头",
-            SearchField.RequestBody => "请求体",
-            SearchField.ResponseHeaders => "响应头",
-            SearchField.ResponseBody => "响应体",
+            SearchField.Method => LocalizationManager.GetString("SearchFieldMethod"),
+            SearchField.StatusCode => LocalizationManager.GetString("SearchFieldStatusCode"),
+            SearchField.RequestHeaders => LocalizationManager.GetString("SearchFieldRequestHeaders"),
+            SearchField.RequestBody => LocalizationManager.GetString("SearchFieldRequestBody"),
+            SearchField.ResponseHeaders => LocalizationManager.GetString("SearchFieldResponseHeaders"),
+            SearchField.ResponseBody => LocalizationManager.GetString("SearchFieldResponseBody"),
             _ => Field.ToString()
         };
 

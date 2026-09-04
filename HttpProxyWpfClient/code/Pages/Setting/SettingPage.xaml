@@ -5,30 +5,55 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:local="clr-namespace:HttpProxyWpfClient.code.Pages.Setting"
       xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      xmlns:loc="clr-namespace:HttpProxyWpfClient.code.Loc"
       mc:Ignorable="d"
-      Title="代理设置"
+      Title="{loc:Loc ProxySetting}"
       Loaded="SettingPage_OnLoaded">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="20">
 
-            <!-- 刷新代理部分 -->
+            <!-- 界面语言部分 -->
             <Border Background="{DynamicResource ControlFillColorSecondaryBrush}"
                     CornerRadius="8" Padding="16" Margin="0,0,0,16">
                 <StackPanel>
-                    <TextBlock Text="代理控制"
+                    <TextBlock Text="{loc:Loc Language}"
                                FontWeight="SemiBold"
                                FontSize="16"
                                Margin="0,0,0,12"/>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                        <Button Content="立即刷新代理设置"
+                        <Label Content="{loc:Loc Language}" VerticalAlignment="Center"/>
+                        <ComboBox Name="LanguageComboBox"
+                                  Width="200"
+                                  Margin="8,0,0,0"
+                                  SelectionChanged="LanguageComboBox_OnSelectionChanged">
+                            <ComboBoxItem Content="中文" Tag="zh-CN"/>
+                            <ComboBoxItem Content="English" Tag="en-US"/>
+                            <ComboBoxItem Content="日本語" Tag="ja-JP"/>
+                            <ComboBoxItem Content="한국어" Tag="ko-KR"/>
+                        </ComboBox>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- 刷新代理部分 -->
+            <Border Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                    CornerRadius="8" Padding="16" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="{loc:Loc ProxyControl}"
+                               FontWeight="SemiBold"
+                               FontSize="16"
+                               Margin="0,0,0,12"/>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                        <Button Content="{loc:Loc RefreshProxyNow}"
                                 Name="RefreshProxyButton"
                                 Click="RefreshProxyButton_OnClick"
                                 Padding="16,8"
                                 Margin="0,0,12,0"/>
 
-                        <Button Content="关闭代理"
+                        <Button Content="{loc:Loc CloseProxy}"
                                 Name="CloseProxyButton"
                                 Click="CloseProxyButton_OnClick"
                                 Padding="16,8"
@@ -41,7 +66,7 @@
             <!-- 本地代理设置部分 -->
             <Border Background="{DynamicResource ControlFillColorSecondaryBrush}"
                     CornerRadius="8" Padding="16" Margin="0,0,0,16">
-                <Expander Header="本地代理设置" IsExpanded="True">
+                <Expander Header="{loc:Loc LocalProxySetting}" IsExpanded="True">
                     <StackPanel Margin="0,12,0,0">
                         <Grid>
                             <Grid.RowDefinitions>
@@ -53,7 +78,7 @@
                                 <ColumnDefinition Width="*" MinWidth="200"/>
                             </Grid.ColumnDefinitions>
 
-                            <Label Content="代理地址:"
+                            <Label Content="{loc:Loc ProxyAddress}"
                                    VerticalAlignment="Center"
                                    Grid.Row="0" Grid.Column="0"/>
                             <TextBox Grid.Row="0" Grid.Column="1"
@@ -62,7 +87,7 @@
                                      Margin="8,4"
                                      Padding="8,4"/>
 
-                            <Label Content="代理端口:"
+                            <Label Content="{loc:Loc ProxyPort}"
                                    VerticalAlignment="Center"
                                    Grid.Row="1" Grid.Column="0"
                                    Margin="0,12,0,0"/>
@@ -79,10 +104,10 @@
             <!-- 上游代理设置部分 -->
             <Border Background="{DynamicResource ControlFillColorSecondaryBrush}"
                     CornerRadius="8" Padding="16">
-                <Expander Header="上游代理设置" IsExpanded="True">
+                <Expander Header="{loc:Loc UpstreamProxySetting}" IsExpanded="True">
                     <StackPanel Margin="0,12,0,0">
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                            <Label Content="启用上游代理:"
+                            <Label Content="{loc:Loc EnableUpstream}"
                                    VerticalAlignment="Center"/>
                             <ui:ToggleSwitch Name="UpstreamEnabledToggle"
                                               IsChecked="True"
@@ -99,7 +124,7 @@
                                 <ColumnDefinition Width="*" MinWidth="200"/>
                             </Grid.ColumnDefinitions>
 
-                            <Label Content="代理地址:"
+                            <Label Content="{loc:Loc ProxyAddress}"
                                    VerticalAlignment="Center"
                                    Grid.Row="0" Grid.Column="0"/>
                             <TextBox Grid.Row="0" Grid.Column="1"
@@ -108,7 +133,7 @@
                                      Margin="8,4"
                                      Padding="8,4"/>
 
-                            <Label Content="代理端口:"
+                            <Label Content="{loc:Loc ProxyPort}"
                                    VerticalAlignment="Center"
                                    Grid.Row="1" Grid.Column="0"
                                    Margin="0,12,0,0"/>

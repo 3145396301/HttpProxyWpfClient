@@ -122,6 +122,13 @@ namespace HttpProxyWpfClient.code.net.entity
             _ => $"{ResponseLength / (1024.0 * 1024.0):0.#} MB"
         };
 
+        /// <summary>
+        /// 响应 Content-Type 是否为图片类型。响应未到达时为 false。
+        /// </summary>
+        public bool IsImageResponse =>
+            !string.IsNullOrEmpty(ResponseContentType)
+            && ResponseContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase);
+
         public SessionEventArgs Session
         {
             get=> _session;

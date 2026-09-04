@@ -2,24 +2,121 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
 
+    <!-- 导航 / 窗口 -->
     <sys:String x:Key="HomePage">主页</sys:String>
-    <sys:String x:Key="About">关于</sys:String>
-    <sys:String x:Key="Contact">联系</sys:String>
-    <sys:String x:Key="Blog">博客</sys:String>
+    <sys:String x:Key="Setting">设置</sys:String>
+    <sys:String x:Key="Minimize">最小化</sys:String>
+    <sys:String x:Key="Maximize">最大化</sys:String>
+    <sys:String x:Key="Restore">还原</sys:String>
+    <sys:String x:Key="Close">关闭</sys:String>
+
+    <!-- 会话列表列头 -->
     <sys:String x:Key="Host">主机</sys:String>
     <sys:String x:Key="Port">端口</sys:String>
     <sys:String x:Key="Method">方法</sys:String>
     <sys:String x:Key="Path">路径</sys:String>
     <sys:String x:Key="Protocol">协议</sys:String>
-    <sys:String x:Key="Process">进程</sys:String>
-    <sys:String x:Key="UserName">用户名</sys:String>
-    <sys:String x:Key="Password">密码</sys:String>
-    <sys:String x:Key="Connect">连接</sys:String>
-    <sys:String x:Key="Disconnect">断开</sys:String>
-    <sys:String x:Key="Send">发送</sys:String>
-    <sys:String x:Key="Clear">清除</sys:String>
-    <sys:String x:Key="Encoding">编码</sys:String>
-    <sys:String x:Key="Chinese">中文</sys:String>
-    <sys:String x:Key="English">英文</sys:String>
+    <sys:String x:Key="Upstream">上行</sys:String>
+    <sys:String x:Key="Downstream">下行</sys:String>
+    <sys:String x:Key="ResponseType">响应类型</sys:String>
+    <sys:String x:Key="ResponseLength">响应长度</sys:String>
+
+    <!-- 主页工具区 -->
+    <sys:String x:Key="Intercept">拦截</sys:String>
+    <sys:String x:Key="ReleaseAll">全部放行</sys:String>
+    <sys:String x:Key="OnlyShowIntercepted">只展示拦截请求</sys:String>
+    <sys:String x:Key="DiscardNonIntercepted">直接丢弃非拦截请求</sys:String>
+    <sys:String x:Key="SearchWithShortcut">搜索 (Ctrl+F)</sys:String>
+    <sys:String x:Key="Research">重新搜索</sys:String>
+
+    <!-- 详情区 -->
+    <sys:String x:Key="RequestContent">请求内容</sys:String>
+    <sys:String x:Key="ResponseContent">响应内容</sys:String>
+    <sys:String x:Key="Release">放行</sys:String>
+    <sys:String x:Key="EditFullRequestBody">编辑完整请求体</sys:String>
+    <sys:String x:Key="EditFullResponseBody">编辑完整响应体</sys:String>
+    <sys:String x:Key="QuickModifyRequestBody">快捷修改请求体</sys:String>
+    <sys:String x:Key="InputRequestBody">输入请求体</sys:String>
+
+    <!-- 右键菜单 -->
+    <sys:String x:Key="CopyAsCurl">复制为 curl</sys:String>
+    <sys:String x:Key="PreviewImage">预览图片</sys:String>
+    <sys:String x:Key="ReplaceImage">替换图片</sys:String>
+
+    <!-- 搜索侧栏 -->
+    <sys:String x:Key="SearchScope">搜索范围：</sys:String>
+    <sys:String x:Key="EnableRegex">启用正则表达式</sys:String>
+    <sys:String x:Key="SearchFieldHost">域名</sys:String>
+    <sys:String x:Key="SearchFieldMethod">方法</sys:String>
+    <sys:String x:Key="SearchFieldStatusCode">状态码</sys:String>
+    <sys:String x:Key="SearchFieldRequestHeaders">请求头</sys:String>
+    <sys:String x:Key="SearchFieldRequestBody">请求体</sys:String>
+    <sys:String x:Key="SearchFieldResponseHeaders">响应头</sys:String>
+    <sys:String x:Key="SearchFieldResponseBody">响应体</sys:String>
+    <sys:String x:Key="Contains">包含</sys:String>
+    <sys:String x:Key="RegexMode">正则表达式</sys:String>
+    <sys:String x:Key="Search">搜索</sys:String>
+    <sys:String x:Key="InvalidRegex">正则表达式无效</sys:String>
+    <sys:String x:Key="SearchResultCount">共 {0} 个结果</sys:String>
+
+    <!-- 弹窗通用 -->
+    <sys:String x:Key="Ok">确定</sys:String>
+    <sys:String x:Key="Cancel">取消</sys:String>
+    <sys:String x:Key="Confirm">确认</sys:String>
+    <sys:String x:Key="AddInterceptRule">添加拦截规则</sys:String>
+    <sys:String x:Key="CannotLocate">无法定位</sys:String>
+    <sys:String x:Key="ForceDisplay">强制展示</sys:String>
+    <sys:String x:Key="ForceDisplayPrompt">强制展示完整内容可能造成界面卡顿，是否继续？</sys:String>
+    <sys:String x:Key="TruncatedMatchPrompt">命中内容位于超长文本被截断的部分，当前编辑框无法定位到该位置。&#10;&#10;点击“强制展示”将在编辑框中加载完整内容并定位到命中位置；&#10;超大文本渲染可能导致界面卡顿，也可以关闭本提示，改用下方“编辑完整请求体/响应体”按钮查看。</sys:String>
+    <sys:String x:Key="RequestIncomplete">请求未完成</sys:String>
+    <sys:String x:Key="RequestIncompletePrefix">请求未完成: {0}</sys:String>
+
+    <!-- 截断 / 错误提示 -->
+    <sys:String x:Key="ContentTruncated">[内容过大，已截断显示（{0}/{1} 字符），编辑框已切换为只读，请使用下方“{2}”按钮修改]</sys:String>
+    <sys:String x:Key="ResponseBodyNotReady">响应主体尚未接受完整、或尚未解析完成，请稍后切换会话重试。</sys:String>
+    <sys:String x:Key="NoValidResponse">代理未收到有效响应，连接可能在建立或传输过程中被中断（例如证书验证失败、连接被重置或超时）。</sys:String>
+
+    <!-- 设置页 -->
+    <sys:String x:Key="Language">界面语言</sys:String>
+    <sys:String x:Key="ProxySetting">代理设置</sys:String>
+    <sys:String x:Key="ProxyControl">代理控制</sys:String>
+    <sys:String x:Key="RefreshProxyNow">立即刷新代理设置</sys:String>
+    <sys:String x:Key="CloseProxy">关闭代理</sys:String>
+    <sys:String x:Key="LocalProxySetting">本地代理设置</sys:String>
+    <sys:String x:Key="UpstreamProxySetting">上游代理设置</sys:String>
+    <sys:String x:Key="ProxyAddress">代理地址:</sys:String>
+    <sys:String x:Key="ProxyPort">代理端口:</sys:String>
+    <sys:String x:Key="EnableUpstream">启用上游代理:</sys:String>
+
+    <!-- 拦截规则设置 -->
+    <sys:String x:Key="GroupName">分组名称</sys:String>
+    <sys:String x:Key="GroupNamePlaceholder">请输入分组名称</sys:String>
+    <sys:String x:Key="AddGroup">新增分组</sys:String>
+    <sys:String x:Key="RuleGroups">拦截规则分组</sys:String>
+    <sys:String x:Key="Enable">启用</sys:String>
+    <sys:String x:Key="AddRule">新增规则</sys:String>
+    <sys:String x:Key="DeleteGroup">删除分组</sys:String>
+    <sys:String x:Key="NewRule">新规则</sys:String>
+    <sys:String x:Key="NameLabel">名称:</sys:String>
+    <sys:String x:Key="DomainLabel">域名:</sys:String>
+    <sys:String x:Key="DomainPlaceholder">例如: example.com</sys:String>
+    <sys:String x:Key="Regex">正则</sys:String>
+    <sys:String x:Key="UrlPlaceholder">匹配完整 URL</sys:String>
+    <sys:String x:Key="MethodLabel">方法:</sys:String>
+    <sys:String x:Key="MethodPlaceholder">例如: GET / POST，留空不限制</sys:String>
+    <sys:String x:Key="InterceptPhase">拦截阶段:</sys:String>
+    <sys:String x:Key="InterceptRequestPhase">上行拦截（请求）</sys:String>
+    <sys:String x:Key="InterceptResponsePhase">下行拦截（响应）</sys:String>
+    <sys:String x:Key="RequestHeaderRules">请求头规则</sys:String>
+    <sys:String x:Key="AddRequestHeader">新增请求头</sys:String>
+    <sys:String x:Key="HeaderNamePlaceholder">Header名称</sys:String>
+    <sys:String x:Key="HeaderValuePlaceholder">Header值</sys:String>
+    <sys:String x:Key="Delete">删除</sys:String>
+    <sys:String x:Key="DeleteRule">删除规则</sys:String>
+
+    <!-- 图片功能 -->
+    <sys:String x:Key="ImageDecodeFailed">图片解析失败，可能已损坏或格式不受支持</sys:String>
+    <sys:String x:Key="ImageReplaceFailed">替换响应图片失败：</sys:String>
+    <sys:String x:Key="AllSupportedImageFormats">所有支持格式</sys:String>
 
 </ResourceDictionary>

@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:HttpProxyWpfClient.code.Pages.BlockingSetting"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:loc="clr-namespace:HttpProxyWpfClient.code.Loc"
              mc:Ignorable="d"
              DataContext="{Binding RelativeSource={RelativeSource Self}}"
              d:DesignHeight="700" d:DesignWidth="1000">
@@ -33,12 +34,12 @@
 
                     <Label Grid.Column="0"
                            VerticalAlignment="Center"
-                           Content="分组名称"
+                           Content="{loc:Loc GroupName}"
                            Margin="0,0,12,0"
                            FontWeight="SemiBold" />
 
                     <ui:TextBox Grid.Column="1"
-                                PlaceholderText="请输入分组名称"
+                                PlaceholderText="{loc:Loc GroupNamePlaceholder}"
                                 VerticalAlignment="Center"
                                 Name="NewGroupName"
                                 Margin="0,0,12,0" />
@@ -46,7 +47,7 @@
                     <ui:Button Grid.Column="2"
                                VerticalAlignment="Center"
                                Appearance="Primary"
-                               Content="新增分组"
+                               Content="{loc:Loc AddGroup}"
                                MinWidth="100"
                                Click="NewGroup_OnClick"
                                FontWeight="SemiBold" />
@@ -68,7 +69,7 @@
                     <Border Grid.Row="0"
                             Padding="12,8"
                             Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}">
-                        <TextBlock Text="拦截规则分组"
+                        <TextBlock Text="{loc:Loc RuleGroups}"
                                    FontWeight="Bold"
                                    VerticalAlignment="Center" />
                     </Border>
@@ -96,7 +97,7 @@
 
                                                     <CheckBox Grid.Column="0"
                                                               IsChecked="{Binding Enabled, Mode=TwoWay}"
-                                                              Content="启用"
+                                                              Content="{loc:Loc Enable}"
                                                               Margin="0,0,12,0"
                                                               VerticalAlignment="Center" />
 
@@ -106,14 +107,14 @@
                                                              VerticalAlignment="Center" />
 
                                                     <ui:Button Grid.Column="2"
-                                                               Content="新增规则"
+                                                               Content="{loc:Loc AddRule}"
                                                                Appearance="Secondary"
                                                                MinWidth="90"
                                                                Margin="0,0,8,0"
                                                                Click="AddRule_Click" />
 
                                                     <ui:Button Grid.Column="3"
-                                                               Content="删除分组"
+                                                               Content="{loc:Loc DeleteGroup}"
                                                                Appearance="Danger"
                                                                MinWidth="90"
                                                                Click="DeleteGroup_Click" />
@@ -148,7 +149,7 @@
                                                                 <Expander.Header>
                                                                     <StackPanel Orientation="Horizontal">
                                                                         <CheckBox IsChecked="{Binding Enabled, Mode=TwoWay}"
-                                                                                  Content="启用"
+                                                                                  Content="{loc:Loc Enable}"
                                                                                   Margin="0,0,12,0"
                                                                                   VerticalAlignment="Center" />
                                                                         <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
@@ -178,30 +179,30 @@
                                                                             <ColumnDefinition Width="Auto" />
                                                                         </Grid.ColumnDefinitions>
 
-                                                                        <Label Grid.Row="0" Grid.Column="0" Content="名称:" Margin="0,0,12,8" FontWeight="SemiBold" />
+                                                                        <Label Grid.Row="0" Grid.Column="0" Content="{loc:Loc NameLabel}" Margin="0,0,12,8" FontWeight="SemiBold" />
                                                                         <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,0,0,8"
                                                                                  Text="{Binding Name, Mode=TwoWay}" />
 
-                                                                        <Label Grid.Row="1" Grid.Column="0" Content="域名:" Margin="0,0,12,8" FontWeight="SemiBold" />
+                                                                        <Label Grid.Row="1" Grid.Column="0" Content="{loc:Loc DomainLabel}" Margin="0,0,12,8" FontWeight="SemiBold" />
                                                                         <ui:TextBox Grid.Row="1" Grid.Column="1" Margin="0,0,12,8"
                                                                                  Text="{Binding Domain, Mode=TwoWay}"
-                                                                                 PlaceholderText="例如: example.com" />
+                                                                                 PlaceholderText="{loc:Loc DomainPlaceholder}" />
                                                                         <CheckBox Grid.Row="1" Grid.Column="2" Margin="0,0,0,8" VerticalAlignment="Center"
-                                                                                  Content="正则"
+                                                                                  Content="{loc:Loc Regex}"
                                                                                   IsChecked="{Binding DomainUseRegex, Mode=TwoWay}" />
 
                                                                         <Label Grid.Row="2" Grid.Column="0" Content="URL:" Margin="0,0,12,8" FontWeight="SemiBold" />
                                                                         <ui:TextBox Grid.Row="2" Grid.Column="1" Margin="0,0,12,8"
                                                                                  Text="{Binding Url, Mode=TwoWay}"
-                                                                                 PlaceholderText="匹配完整 URL" />
+                                                                                 PlaceholderText="{loc:Loc UrlPlaceholder}" />
                                                                         <CheckBox Grid.Row="2" Grid.Column="2" Margin="0,0,0,8" VerticalAlignment="Center"
-                                                                                  Content="正则"
+                                                                                  Content="{loc:Loc Regex}"
                                                                                   IsChecked="{Binding UrlUseRegex, Mode=TwoWay}" />
 
-                                                                        <Label Grid.Row="3" Grid.Column="0" Content="方法:" Margin="0,0,12,0" FontWeight="SemiBold" />
+                                                                        <Label Grid.Row="3" Grid.Column="0" Content="{loc:Loc MethodLabel}" Margin="0,0,12,0" FontWeight="SemiBold" />
                                                                         <ui:TextBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2"
                                                                                  Text="{Binding Method, Mode=TwoWay}"
-                                                                                 PlaceholderText="例如: GET / POST，留空不限制" />
+                                                                                 PlaceholderText="{loc:Loc MethodPlaceholder}" />
                                                                     </Grid>
 
                                                                     <!-- 拦截阶段 -->
@@ -211,10 +212,10 @@
                                                                             CornerRadius="4"
                                                                             Margin="0,0,0,8">
                                                                         <StackPanel Orientation="Horizontal">
-                                                                            <TextBlock Text="拦截阶段:" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,12,0" />
-                                                                            <CheckBox Content="上行拦截（请求）" Margin="0,0,16,0"
+                                                                            <TextBlock Text="{loc:Loc InterceptPhase}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,12,0" />
+                                                                            <CheckBox Content="{loc:Loc InterceptRequestPhase}" Margin="0,0,16,0"
                                                                                       IsChecked="{Binding InterceptRequest, Mode=TwoWay}" />
-                                                                            <CheckBox Content="下行拦截（响应）"
+                                                                            <CheckBox Content="{loc:Loc InterceptResponsePhase}"
                                                                                       IsChecked="{Binding InterceptResponse, Mode=TwoWay}" />
                                                                         </StackPanel>
                                                                     </Border>
@@ -232,10 +233,10 @@
                                                                                 <ColumnDefinition Width="Auto" />
                                                                             </Grid.ColumnDefinitions>
 
-                                                                            <TextBlock Grid.Column="0" Text="请求头规则" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                                                            <TextBlock Grid.Column="0" Text="{loc:Loc RequestHeaderRules}" FontWeight="SemiBold" VerticalAlignment="Center" />
 
                                                                             <ui:Button Grid.Column="2"
-                                                                                       Content="新增请求头"
+                                                                                       Content="{loc:Loc AddRequestHeader}"
                                                                                        Appearance="Secondary"
                                                                                        MinWidth="100"
                                                                                        Click="AddHeader_Click"
@@ -263,10 +264,10 @@
                                                                                              Margin="0,0,4,0"
                                                                                              Text="{Binding Key, Mode=TwoWay}"
                                                                                              VerticalContentAlignment="Center"
-                                                                                             PlaceholderText="Header名称" />
+                                                                                             PlaceholderText="{loc:Loc HeaderNamePlaceholder}" />
 
                                                                                     <CheckBox Grid.Column="1"
-                                                                                              Content="正则"
+                                                                                              Content="{loc:Loc Regex}"
                                                                                               Margin="0,0,8,0"
                                                                                               VerticalAlignment="Center"
                                                                                               IsChecked="{Binding KeyUseRegex, Mode=TwoWay}" />
@@ -275,16 +276,16 @@
                                                                                                 Margin="0,0,4,0"
                                                                                                 Text="{Binding Value, Mode=TwoWay}"
                                                                                                 VerticalContentAlignment="Center"
-                                                                                                PlaceholderText="Header值" />
+                                                                                                PlaceholderText="{loc:Loc HeaderValuePlaceholder}" />
 
                                                                                     <CheckBox Grid.Column="3"
-                                                                                              Content="正则"
+                                                                                              Content="{loc:Loc Regex}"
                                                                                               Margin="0,0,8,0"
                                                                                               VerticalAlignment="Center"
                                                                                               IsChecked="{Binding ValueUseRegex, Mode=TwoWay}" />
 
                                                                                     <ui:Button Grid.Column="4"
-                                                                                               Content="删除"
+                                                                                               Content="{loc:Loc Delete}"
                                                                                                Appearance="Danger"
                                                                                                MinWidth="60"
                                                                                                Click="DeleteHeader_Click" />
@@ -298,7 +299,7 @@
                                                                                 Orientation="Horizontal"
                                                                                 HorizontalAlignment="Right"
                                                                                 Margin="0,8,0,0">
-                                                                        <ui:Button Content="删除规则"
+                                                                        <ui:Button Content="{loc:Loc DeleteRule}"
                                                                                    Appearance="Danger"
                                                                                    MinWidth="80"
                                                                                    Click="DeleteRule_Click" />

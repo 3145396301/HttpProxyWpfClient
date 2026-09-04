@@ -5,6 +5,7 @@
                  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                  xmlns:local="clr-namespace:HttpProxyWpfClient"
                  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                 xmlns:loc="clr-namespace:HttpProxyWpfClient.code.Loc"
                  mc:Ignorable="d"
                  Title="HttpProxyWpfClient" Height="1000" Width="1500"
                  DataContext="{Binding RelativeSource={RelativeSource Self}}">
@@ -49,7 +50,7 @@
                             HorizontalAlignment="Right">
                     <!-- 最小化 -->
                     <Button Width="46" Height="36" Padding="0"
-                            ToolTip="最小化"
+                            ToolTip="{loc:Loc Minimize}"
                             Click="Minimize_Click"
                             Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
                         <Path Data="M0,0 L10,0" Stroke="White" StrokeThickness="2"
@@ -58,7 +59,7 @@
                     <!-- 最大化/还原 -->
                     <Button x:Name="MaxRestoreButton"
                             Width="46" Height="36" Padding="0"
-                            ToolTip="最大化"
+                            ToolTip="{loc:Loc Maximize}"
                             Click="MaximizeRestore_Click"
                             Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
                         <Grid Width="10" Height="10" HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -73,7 +74,7 @@
                     </Button>
                     <!-- 关闭 -->
                     <Button Width="46" Height="36" Padding="0"
-                            ToolTip="关闭"
+                            ToolTip="{loc:Loc Close}"
                             Click="Close_Click"
                             Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
                         <Path Data="M0,0 L10,10 M10,0 L0,10" Stroke="White" StrokeThickness="2"
@@ -84,11 +85,8 @@
         </Border>
         <ui:NavigationView Grid.Row="1" PaneDisplayMode="Top">
             <ui:NavigationView.MenuItems>
-                <ui:NavigationViewItem Name="HomePage" Click="SelectionChanged"  Tag="Main" Content="主页"/>
-                <ui:NavigationViewItem Name="SettingPage" Click="SelectionChanged"  Tag="Setting" Content="Setting"/>
-                <!-- <ui:NavigationViewItem Click="SelectionChanged" Content="{loc:Loc Face}"/> -->
-                <!-- <ui:NavigationViewItem Click="SelectionChanged" Tag="PasswordManger" Content="{loc:Loc PasswordBook}"/> -->
-                <!-- <ui:NavigationViewItem Click="SelectionChanged" Tag="SettingManger" Content="{loc:Loc Setting}"/> -->
+                <ui:NavigationViewItem Name="HomePage" Click="SelectionChanged"  Tag="Main" Content="{loc:Loc HomePage}"/>
+                <ui:NavigationViewItem Name="SettingPage" Click="SelectionChanged"  Tag="Setting" Content="{loc:Loc Setting}"/>
             </ui:NavigationView.MenuItems>
         </ui:NavigationView>
         <Frame x:Name="RootFrame"

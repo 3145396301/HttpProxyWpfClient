@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using HttpProxyWpfClient.code.Loc;
 using HttpProxyWpfClient.code.net;
 
 namespace HttpProxyWpfClient.code.Pages.Setting;
@@ -26,6 +27,46 @@ public partial class SettingPage : Page
         UpstreamEnabledToggle.IsChecked = proxyConnect.UpstreamEnabled;
         UpstreamProxyAddressTextBox.Text = proxyConnect.UpstreamIp ?? "";
         UpstreamProxyPortTextBox.Text = proxyConnect.UpstreamPort == -1 ? "" : proxyConnect.UpstreamPort.ToString();
+
+        BackfillLanguageSelection(page);
+    }
+
+    /// <summary>
+    /// 按持久化的语言配置回填下拉框。回填触发的 SelectionChanged 里通过 _applyingLanguage
+    /// 区分程序赋值与用户选择，避免回填时重复写配置/重设语言
+    /// </summary>
+    private bool _applyingLanguage;
+
+    private void BackfillLanguageSelection(Main? page)
+    {
+        string language = page?.GetLanguageSetting() ?? "zh-CN";
+        _applyingLanguage = true;
+        try
+        {
+            foreach (ComboBoxItem item in LanguageComboBox.Items)
+            {
+                if ((string)item.Tag == language)
+                {
+                    LanguageComboBox.SelectedItem = item;
+                    break;
+                }
+            }
+        }
+        finally
+        {
+            _applyingLanguage = false;
+        }
+    }
+
+    private void LanguageComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_applyingLanguage) return;
+
+        if (LanguageComboBox.SelectedItem is ComboBoxItem item && item.Tag is string culture)
+        {
+            LocalizationManager.SetLanguage(culture);
+            (MainWindow.pages["Main"] as Main)?.ApplyLanguageSetting(culture);
+        }
     }
 
     private void RefreshProxyButton_OnClick(object sender, RoutedEventArgs e)
@@ -46,7 +87,7 @@ public partial class SettingPage : Page
 
     private void CloseProxyButton_OnClick(object sender, RoutedEventArgs e)
     {
-        Main page = MainWindow.pages["Main"] as  Main;
+        Main page = MainWindow.pages["Main"] as Main;
         page?.StopProxy();
     }
 }

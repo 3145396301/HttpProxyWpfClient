@@ -5,6 +5,12 @@ namespace HttpProxyWpfClient.code.Loc
 {
     public static class LocalizationManager
     {
+        /// <summary>
+        /// 按当前语言取字符串资源，key 缺失时返回 key 本身（便于在界面上发现遗漏词条）
+        /// </summary>
+        public static string GetString(string key) =>
+            Application.Current?.TryFindResource(key) as string ?? key;
+
         public static event Action LanguageChanged;
 
         public static void SetLanguage(string cultureName)

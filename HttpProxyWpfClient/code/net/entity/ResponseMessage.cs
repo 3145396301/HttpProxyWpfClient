@@ -2,6 +2,7 @@ using System;
 using System.Text;
 using System.Text.RegularExpressions;
 using HttpProxyWpfClient.code.@base;
+using HttpProxyWpfClient.code.Loc;
 using Titanium.Web.Proxy.EventArguments;
 using Titanium.Web.Proxy.Http;
 
@@ -54,7 +55,9 @@ namespace HttpProxyWpfClient.code.net.entity
 
         public bool HasError => Error != null;
 
-        public string ErrorText => Error != null ? $"请求未完成: {Error.Message}" : "";
+        public string ErrorText => Error != null
+            ? string.Format(LocalizationManager.GetString("RequestIncompletePrefix"), Error.Message)
+            : "";
 
         /// <summary>
         /// 完整的响应原文（首行+body），用于放行时解析，不用于界面展示
@@ -97,7 +100,10 @@ namespace HttpProxyWpfClient.code.net.entity
                 }
 
                 return full.Substring(0, MaxDisplayLength)
-                       + $"\r\n\r\n[内容过大，已截断显示（{MaxDisplayLength:N0}/{full.Length:N0} 字符），编辑框已切换为只读，请使用下方“编辑完整响应体”按钮修改]";
+                       + "\r\n\r\n"
+                       + string.Format(LocalizationManager.GetString("ContentTruncated"),
+                           MaxDisplayLength.ToString("N0"), full.Length.ToString("N0"),
+                           LocalizationManager.GetString("EditFullResponseBody"));
             }
         }
 
@@ -125,7 +131,7 @@ namespace HttpProxyWpfClient.code.net.entity
                 }
                 catch (Exception e)
                 {
-                    Error = new Exception("响应主体尚未接受完整、或尚未解析完成，请稍后切换会话重试。", e);
+                    Error = new Exception(LocalizationManager.GetString("ResponseBodyNotReady"), e);
                 }
 
             }
@@ -136,7 +142,7 @@ namespace HttpProxyWpfClient.code.net.entity
 
             if (Error == null && resp.StatusCode == 0)
             {
-                Error = new Exception("代理未收到有效响应，连接可能在建立或传输过程中被中断（例如证书验证失败、连接被重置或超时）。");
+                Error = new Exception(LocalizationManager.GetString("NoValidResponse"));
             }
 
         }

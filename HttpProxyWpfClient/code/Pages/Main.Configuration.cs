@@ -7,6 +7,22 @@ namespace HttpProxyWpfClient.code.Pages;
 
 public partial class Main
 {
+    /// <summary>
+    /// 当前界面语言（CultureName）。SaveConfig 每次新建 AppConfig，语言经由本字段透传，避免被重置为默认值
+    /// </summary>
+    private string _languageSetting = "zh-CN";
+
+    public string GetLanguageSetting() => _languageSetting;
+
+    /// <summary>
+    /// 记录界面语言选择并持久化。语言字典的切换由 SettingPage 调用 LocalizationManager.SetLanguage 完成
+    /// </summary>
+    public void ApplyLanguageSetting(string culture)
+    {
+        _languageSetting = culture;
+        SaveConfig();
+    }
+
     public void SaveConfig()
     {
         var config = new AppConfig
@@ -21,7 +37,8 @@ public partial class Main
             RequestContentFontSize = _requestContentFontSize,
             ResponseContentFontSize = _responseContentFontSize,
             EditBodyFontSize = _editBodyFontSize,
-            Groups = Groups.ToList()
+            Groups = Groups.ToList(),
+            Language = _languageSetting
         };
         SaveSessionColumnLayout(config);
         ConfigService.Save(config);

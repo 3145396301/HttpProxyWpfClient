@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using HttpProxyWpfClient.code.Loc;
 using HttpProxyWpfClient.code.Pages;
 using HttpProxyWpfClient.code.Pages.Setting;
 using Wpf.Ui.Controls;
@@ -97,14 +98,14 @@ namespace HttpProxyWpfClient
                 WindowState = WindowState.Maximized;
                 MaxIcon.Visibility = Visibility.Collapsed;
                 RestoreIcon.Visibility = Visibility.Visible;
-                MaxRestoreButton.ToolTip = "还原";
+                MaxRestoreButton.ToolTip = LocalizationManager.GetString("Restore");
             }
             else
             {
                 WindowState = WindowState.Normal;
                 MaxIcon.Visibility = Visibility.Visible;
                 RestoreIcon.Visibility = Visibility.Collapsed;
-                MaxRestoreButton.ToolTip = "最大化";
+                MaxRestoreButton.ToolTip = LocalizationManager.GetString("Maximize");
             }
         }
 
@@ -136,11 +137,6 @@ namespace HttpProxyWpfClient
                     RootFrame.Navigate(pages[tag]);
                 }
             }
-        }
-
-        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
-        {
-            // LocalizationManager.SetLanguage("ja-JP");
         }
     }
 }

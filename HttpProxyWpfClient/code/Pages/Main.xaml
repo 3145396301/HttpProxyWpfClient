@@ -43,22 +43,22 @@
 
         <!-- 顶部按钮栏 -->
         <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-            <ui:Button Click="block_OnClick" Margin="0,0,5,0">拦截</ui:Button>
-            <ui:Button Click="discharged_OnClick" Margin="0,0,15,0">全部放行</ui:Button>
+            <ui:Button Click="block_OnClick" Margin="0,0,5,0" Content="{loc:Loc Intercept}"/>
+            <ui:Button Click="discharged_OnClick" Margin="0,0,15,0" Content="{loc:Loc ReleaseAll}"/>
 
-            <ui:TextBlock Text="只展示拦截请求" Foreground="AliceBlue" VerticalAlignment="Center" Margin="0,0,5,0"/>
+            <ui:TextBlock Text="{loc:Loc OnlyShowIntercepted}" Foreground="AliceBlue" VerticalAlignment="Center" Margin="0,0,5,0"/>
             <ui:ToggleSwitch Name="OnlyShowInterceptedToggle"
                               IsChecked="{Binding OnlyShowIntercepted, Mode=TwoWay}"
                               VerticalAlignment="Center" Margin="0,0,15,0"/>
 
-            <ui:TextBlock Text="直接丢弃非拦截请求" Foreground="AliceBlue" VerticalAlignment="Center" Margin="0,0,5,0"
+            <ui:TextBlock Text="{loc:Loc DiscardNonIntercepted}" Foreground="AliceBlue" VerticalAlignment="Center" Margin="0,0,5,0"
                           Visibility="{Binding OnlyShowIntercepted, Converter={StaticResource BoolToVisibility}}"/>
             <ui:ToggleSwitch Name="DiscardNonInterceptedToggle"
                               IsChecked="{Binding DiscardNonIntercepted, Mode=TwoWay}"
                               VerticalAlignment="Center" Margin="0,0,15,0"
                               Visibility="{Binding OnlyShowIntercepted, Converter={StaticResource BoolToVisibility}}"/>
 
-            <ui:Button Click="Search_OnClick">搜索 (Ctrl+F)</ui:Button>
+            <ui:Button Click="Search_OnClick" Content="{loc:Loc SearchWithShortcut}"/>
         </StackPanel>
 
         <!-- 主内容区域 -->
@@ -81,16 +81,19 @@
                          ContextMenuOpening="SessionList_OnContextMenuOpening">
                 <ui:ListView.ContextMenu>
                     <ContextMenu>
-                        <MenuItem Header="复制为 curl">
+                        <MenuItem Header="{loc:Loc CopyAsCurl}">
                             <MenuItem Header="cmd" Click="CopyCurlCmd_OnClick"/>
                             <MenuItem Header="bash" Click="CopyCurlBash_OnClick"/>
                             <MenuItem Header="PowerShell" Click="CopyCurlPowerShell_OnClick"/>
                         </MenuItem>
+                        <Separator/>
+                        <MenuItem x:Name="MenuPreviewImage" Header="{loc:Loc PreviewImage}" Click="PreviewImage_OnClick"/>
+                        <MenuItem x:Name="MenuReplaceImage" Header="{loc:Loc ReplaceImage}" Click="ReplaceImage_OnClick"/>
                     </ContextMenu>
                 </ui:ListView.ContextMenu>
                 <ui:ListView.View>
                     <ui:GridView>
-                        <ui:GridViewColumn x:Name="ColUp" Header="上行" Width="40">
+                        <ui:GridViewColumn x:Name="ColUp" Header="{loc:Loc Upstream}" Width="40">
                             <ui:GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Ellipse Width="12" Height="12" HorizontalAlignment="Center" VerticalAlignment="Center" Fill="Orange">
@@ -108,7 +111,7 @@
                                 </DataTemplate>
                             </ui:GridViewColumn.CellTemplate>
                         </ui:GridViewColumn>
-                        <ui:GridViewColumn x:Name="ColDown" Header="下行" Width="40">
+                        <ui:GridViewColumn x:Name="ColDown" Header="{loc:Loc Downstream}" Width="40">
                             <ui:GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Ellipse Width="12" Height="12" HorizontalAlignment="Center" VerticalAlignment="Center" Fill="Red">
@@ -130,8 +133,8 @@
                         <ui:GridViewColumn x:Name="ColProtocol" Header="{loc:Loc Protocol}" DisplayMemberBinding="{Binding Protocol}" Width="70" />
                         <ui:GridViewColumn x:Name="ColMethod" Header="{loc:Loc Method}" DisplayMemberBinding="{Binding Method}" Width="70" />
                         <ui:GridViewColumn x:Name="ColPath" Header="{loc:Loc Path}" DisplayMemberBinding="{Binding Url}" Width="200" />
-                        <ui:GridViewColumn x:Name="ColContentType" Header="响应类型" DisplayMemberBinding="{Binding ResponseContentType}" Width="130" />
-                        <ui:GridViewColumn x:Name="ColContentLength" Header="响应长度" DisplayMemberBinding="{Binding ResponseLengthDisplay}" Width="90" />
+                        <ui:GridViewColumn x:Name="ColContentType" Header="{loc:Loc ResponseType}" DisplayMemberBinding="{Binding ResponseContentType}" Width="130" />
+                        <ui:GridViewColumn x:Name="ColContentLength" Header="{loc:Loc ResponseLength}" DisplayMemberBinding="{Binding ResponseLengthDisplay}" Width="90" />
                     </ui:GridView>
                 </ui:ListView.View>
             </ui:ListView>
@@ -157,7 +160,7 @@
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <ui:TextBlock Text="请求内容" Margin="5,2" FontWeight="SemiBold" Foreground="White"/>
+                        <ui:TextBlock Text="{loc:Loc RequestContent}" Margin="5,2" FontWeight="SemiBold" Foreground="White"/>
 
                         <avalonedit:TextEditor Name="RequestEditor" Grid.Row="1"
                                                 Background="Transparent" Foreground="White"
@@ -170,8 +173,8 @@
 
                         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5">
                             <ui:Button Click="EditRequestBody_OnClick" Margin="0,0,5,0"
-                                       Visibility="{Binding RequestMessage.IsTruncated, Converter={StaticResource BoolToVisibility}}">编辑完整请求体</ui:Button>
-                            <ui:Button Click="PassRequest_OnClick">放行</ui:Button>
+                                       Visibility="{Binding RequestMessage.IsTruncated, Converter={StaticResource BoolToVisibility}}" Content="{loc:Loc EditFullRequestBody}"/>
+                            <ui:Button Click="PassRequest_OnClick" Content="{loc:Loc Release}"/>
                         </StackPanel>
                     </Grid>
                 </Border>
@@ -188,7 +191,7 @@
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <ui:TextBlock Text="响应内容" Margin="5,2" FontWeight="SemiBold"
+                        <ui:TextBlock Text="{loc:Loc ResponseContent}" Margin="5,2" FontWeight="SemiBold"
                                    Foreground="White" />
 
                         <avalonedit:TextEditor Name="ResponseEditor" Grid.Row="1"
@@ -224,10 +227,10 @@
                             </ui:TextBlock>
 
                             <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                                <ui:Button Click="Pass_OnClick" Margin="0,0,5,0">放行</ui:Button>
+                                <ui:Button Click="Pass_OnClick" Margin="0,0,5,0" Content="{loc:Loc Release}"/>
                                 <ui:Button Click="EditResponseBody_OnClick" Margin="0,0,5,0"
-                                           Visibility="{Binding ResponseMessage.IsTruncated, Converter={StaticResource BoolToVisibility}}">编辑完整响应体</ui:Button>
-                                <ui:Button Name="ModifyRequestBody" Click="ModifyRequestBody_OnClick">快捷修改请求体</ui:Button>
+                                           Visibility="{Binding ResponseMessage.IsTruncated, Converter={StaticResource BoolToVisibility}}" Content="{loc:Loc EditFullResponseBody}"/>
+                                <ui:Button Name="ModifyRequestBody" Click="ModifyRequestBody_OnClick" Content="{loc:Loc QuickModifyRequestBody}"/>
                             </StackPanel>
                         </Grid>
                     </Grid>
@@ -262,24 +265,24 @@
                     <ui:TextBox Name="SearchKeywordTextBox" Grid.Column="0"
                                 Text="{Binding SearchKeyword, UpdateSourceTrigger=PropertyChanged}"
                                 KeyDown="SearchKeywordTextBox_OnKeyDown"/>
-                    <ui:Button Grid.Column="1" Margin="4,0,0,0" Click="ReSearch_OnClick">重新搜索</ui:Button>
+                    <ui:Button Grid.Column="1" Margin="4,0,0,0" Click="ReSearch_OnClick" Content="{loc:Loc Research}"/>
                 </Grid>
 
                 <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,6">
-                    <CheckBox Content="启用正则表达式" IsChecked="{Binding SearchUseRegex}"/>
+                    <CheckBox Content="{loc:Loc EnableRegex}" IsChecked="{Binding SearchUseRegex}"/>
                 </StackPanel>
 
                 <StackPanel Grid.Row="2" Margin="0,0,0,6">
-                    <ui:TextBlock Text="搜索范围：" Foreground="AliceBlue" Margin="0,0,0,4"/>
+                    <ui:TextBlock Text="{loc:Loc SearchScope}" Foreground="AliceBlue" Margin="0,0,0,4"/>
                     <WrapPanel>
-                        <CheckBox Content="域名" Margin="0,0,10,4" IsChecked="{Binding SearchFieldHost}"/>
+                        <CheckBox Content="{loc:Loc SearchFieldHost}" Margin="0,0,10,4" IsChecked="{Binding SearchFieldHost}"/>
                         <CheckBox Content="URL" Margin="0,0,10,4" IsChecked="{Binding SearchFieldUrl}"/>
-                        <CheckBox Content="方法" Margin="0,0,10,4" IsChecked="{Binding SearchFieldMethod}"/>
-                        <CheckBox Content="状态码" Margin="0,0,10,4" IsChecked="{Binding SearchFieldStatusCode}"/>
-                        <CheckBox Content="请求头" Margin="0,0,10,4" IsChecked="{Binding SearchFieldRequestHeaders}"/>
-                        <CheckBox Content="请求体" Margin="0,0,10,4" IsChecked="{Binding SearchFieldRequestBody}"/>
-                        <CheckBox Content="响应头" Margin="0,0,10,4" IsChecked="{Binding SearchFieldResponseHeaders}"/>
-                        <CheckBox Content="响应体" Margin="0,0,10,4" IsChecked="{Binding SearchFieldResponseBody}"/>
+                        <CheckBox Content="{loc:Loc SearchFieldMethod}" Margin="0,0,10,4" IsChecked="{Binding SearchFieldMethod}"/>
+                        <CheckBox Content="{loc:Loc SearchFieldStatusCode}" Margin="0,0,10,4" IsChecked="{Binding SearchFieldStatusCode}"/>
+                        <CheckBox Content="{loc:Loc SearchFieldRequestHeaders}" Margin="0,0,10,4" IsChecked="{Binding SearchFieldRequestHeaders}"/>
+                        <CheckBox Content="{loc:Loc SearchFieldRequestBody}" Margin="0,0,10,4" IsChecked="{Binding SearchFieldRequestBody}"/>
+                        <CheckBox Content="{loc:Loc SearchFieldResponseHeaders}" Margin="0,0,10,4" IsChecked="{Binding SearchFieldResponseHeaders}"/>
+                        <CheckBox Content="{loc:Loc SearchFieldResponseBody}" Margin="0,0,10,4" IsChecked="{Binding SearchFieldResponseBody}"/>
                     </WrapPanel>
                 </StackPanel>
 

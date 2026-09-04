@@ -1,45 +1,122 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
-    <sys:String x:Key="Hello">こんにちは</sys:String>
-    <sys:String x:Key="Exit">終了</sys:String>
-    <sys:String x:Key="Title">雪切</sys:String>
-    <sys:String x:Key="ShearManagement">クリップボード管理</sys:String>
-    <sys:String x:Key="Shear">クリップボード</sys:String>
-    <sys:String x:Key="Face">絵文字</sys:String>
-    <sys:String x:Key="New">新規</sys:String>
-    <sys:String x:Key="About">概要</sys:String>
-    <sys:String x:Key="Index">番号</sys:String>
-    <sys:String x:Key="Name">名前</sys:String>
-    <sys:String x:Key="Type">種類</sys:String>
-    <sys:String x:Key="Content">内容</sys:String>
+
+    <!-- ナビゲーション / ウィンドウ -->
+    <sys:String x:Key="HomePage">ホーム</sys:String>
     <sys:String x:Key="Setting">設定</sys:String>
-    <sys:String x:Key="Language">言語</sys:String>
-    <sys:String x:Key="Theme">テーマ</sys:String>
-    <sys:String x:Key="Font">フォント</sys:String>
-    <sys:String x:Key="FontSize">フォントサイズ</sys:String>
-    <sys:String x:Key="FontColor">文字色</sys:String>
-    <sys:String x:Key="FontBackgroundColor">文字背景色</sys:String>
-    <sys:String x:Key="User">ユーザー</sys:String>
-    <sys:String x:Key="Password">パスワード</sys:String>
-    <sys:String x:Key="Login">ログイン</sys:String>
-    <sys:String x:Key="Logout">ログアウト</sys:String>
-    <sys:String x:Key="Register">登録</sys:String>
-    <sys:String x:Key="UserName">ユーザー名</sys:String>
-    <sys:String x:Key="ConfirmPassword">パスワード確認</sys:String>
-    <sys:String x:Key="UserManagement">ユーザー管理</sys:String>
-    <sys:String x:Key="Platform">プラットフォーム</sys:String>
-    <sys:String x:Key="PasswordBook">パスワード帳</sys:String>
-    <sys:String x:Key="AddNewPassword">新しいパスワードを追加</sys:String>
-    <sys:String x:Key="MyPassword">私のパスワード</sys:String>
+    <sys:String x:Key="Minimize">最小化</sys:String>
+    <sys:String x:Key="Maximize">最大化</sys:String>
+    <sys:String x:Key="Restore">元に戻す</sys:String>
+    <sys:String x:Key="Close">閉じる</sys:String>
+
+    <!-- セッション一覧の列 -->
+    <sys:String x:Key="Host">ホスト</sys:String>
+    <sys:String x:Key="Port">ポート</sys:String>
+    <sys:String x:Key="Method">メソッド</sys:String>
+    <sys:String x:Key="Path">パス</sys:String>
+    <sys:String x:Key="Protocol">プロトコル</sys:String>
+    <sys:String x:Key="Upstream">上り</sys:String>
+    <sys:String x:Key="Downstream">下り</sys:String>
+    <sys:String x:Key="ResponseType">レスポンスタイプ</sys:String>
+    <sys:String x:Key="ResponseLength">レスポンス長</sys:String>
+
+    <!-- メインツールバー -->
+    <sys:String x:Key="Intercept">インターセプト</sys:String>
+    <sys:String x:Key="ReleaseAll">すべて解放</sys:String>
+    <sys:String x:Key="OnlyShowIntercepted">インターセプトしたリクエストのみ表示</sys:String>
+    <sys:String x:Key="DiscardNonIntercepted">非インターセプトのリクエストを破棄</sys:String>
+    <sys:String x:Key="SearchWithShortcut">検索 (Ctrl+F)</sys:String>
+    <sys:String x:Key="Research">再検索</sys:String>
+
+    <!-- 詳細ペイン -->
+    <sys:String x:Key="RequestContent">リクエスト内容</sys:String>
+    <sys:String x:Key="ResponseContent">レスポンス内容</sys:String>
+    <sys:String x:Key="Release">解放</sys:String>
+    <sys:String x:Key="EditFullRequestBody">完全なリクエストボディを編集</sys:String>
+    <sys:String x:Key="EditFullResponseBody">完全なレスポンスボディを編集</sys:String>
+    <sys:String x:Key="QuickModifyRequestBody">リクエストボディを簡易編集</sys:String>
+    <sys:String x:Key="InputRequestBody">リクエストボディを入力</sys:String>
+
+    <!-- 右クリックメニュー -->
+    <sys:String x:Key="CopyAsCurl">curl としてコピー</sys:String>
+    <sys:String x:Key="PreviewImage">画像をプレビュー</sys:String>
+    <sys:String x:Key="ReplaceImage">画像を置換</sys:String>
+
+    <!-- 検索サイドバー -->
+    <sys:String x:Key="SearchScope">検索範囲：</sys:String>
+    <sys:String x:Key="EnableRegex">正規表現を有効にする</sys:String>
+    <sys:String x:Key="SearchFieldHost">ドメイン</sys:String>
+    <sys:String x:Key="SearchFieldMethod">メソッド</sys:String>
+    <sys:String x:Key="SearchFieldStatusCode">ステータスコード</sys:String>
+    <sys:String x:Key="SearchFieldRequestHeaders">リクエストヘッダー</sys:String>
+    <sys:String x:Key="SearchFieldRequestBody">リクエストボディ</sys:String>
+    <sys:String x:Key="SearchFieldResponseHeaders">レスポンスヘッダー</sys:String>
+    <sys:String x:Key="SearchFieldResponseBody">レスポンスボディ</sys:String>
+    <sys:String x:Key="Contains">含む</sys:String>
+    <sys:String x:Key="RegexMode">正規表現</sys:String>
     <sys:String x:Key="Search">検索</sys:String>
-    <sys:String x:Key="Remark">備考</sys:String>
-    <sys:String x:Key="Copy">コピー</sys:String>
+    <sys:String x:Key="InvalidRegex">正規表現が無効です</sys:String>
+    <sys:String x:Key="SearchResultCount">{0} 件の結果</sys:String>
+
+    <!-- 共通ダイアログ -->
+    <sys:String x:Key="Ok">OK</sys:String>
+    <sys:String x:Key="Cancel">キャンセル</sys:String>
+    <sys:String x:Key="Confirm">確認</sys:String>
+    <sys:String x:Key="AddInterceptRule">インターセプトルールを追加</sys:String>
+    <sys:String x:Key="CannotLocate">位置を特定できません</sys:String>
+    <sys:String x:Key="ForceDisplay">強制表示</sys:String>
+    <sys:String x:Key="ForceDisplayPrompt">完全な内容を強制表示すると UI が固まる可能性があります。続行しますか？</sys:String>
+    <sys:String x:Key="TruncatedMatchPrompt">一致箇所はサイズ超過により切り詰められた部分にあり、現在のエディターでは位置を特定できません。&#10;&#10;「強制表示」をクリックすると完全な内容を読み込み、一致位置に移動します。&#10;超大テキストの描画で UI が固まる可能性があります。この提示を閉じて、下の「完全なリクエスト/レスポンスボディを編集」ボタンを使うこともできます。</sys:String>
+    <sys:String x:Key="RequestIncomplete">リクエスト未完了</sys:String>
+    <sys:String x:Key="RequestIncompletePrefix">リクエスト未完了: {0}</sys:String>
+
+    <!-- 切り詰め / エラーメッセージ -->
+    <sys:String x:Key="ContentTruncated">[内容が大きすぎるため表示を切り詰めました（{0}/{1} 文字）。エディターは読み取り専用です。下の「{2}」ボタンから編集してください]</sys:String>
+    <sys:String x:Key="ResponseBodyNotReady">レスポンスボディはまだ完全に受信または解析されていません。後でもう一度セッションを切り替えてお試しください。</sys:String>
+    <sys:String x:Key="NoValidResponse">プロキシは有効なレスポンスを受信できませんでした。接続の確立または転送中に中断された可能性があります（証明書検証の失敗、接続のリセット、タイムアウトなど）。</sys:String>
+
+    <!-- 設定ページ -->
+    <sys:String x:Key="Language">言語</sys:String>
+    <sys:String x:Key="ProxySetting">プロキシ設定</sys:String>
+    <sys:String x:Key="ProxyControl">プロキシ制御</sys:String>
+    <sys:String x:Key="RefreshProxyNow">プロキシ設定を今すぐ更新</sys:String>
+    <sys:String x:Key="CloseProxy">プロキシを停止</sys:String>
+    <sys:String x:Key="LocalProxySetting">ローカルプロキシ設定</sys:String>
+    <sys:String x:Key="UpstreamProxySetting">アップストリームプロキシ設定</sys:String>
+    <sys:String x:Key="ProxyAddress">プロキシアドレス:</sys:String>
+    <sys:String x:Key="ProxyPort">プロキシポート:</sys:String>
+    <sys:String x:Key="EnableUpstream">アップストリームプロキシを有効にする:</sys:String>
+
+    <!-- インターセプトルール設定 -->
+    <sys:String x:Key="GroupName">グループ名</sys:String>
+    <sys:String x:Key="GroupNamePlaceholder">グループ名を入力してください</sys:String>
+    <sys:String x:Key="AddGroup">グループを追加</sys:String>
+    <sys:String x:Key="RuleGroups">インターセプトルールグループ</sys:String>
+    <sys:String x:Key="Enable">有効</sys:String>
+    <sys:String x:Key="AddRule">ルールを追加</sys:String>
+    <sys:String x:Key="DeleteGroup">グループを削除</sys:String>
+    <sys:String x:Key="NewRule">新しいルール</sys:String>
+    <sys:String x:Key="NameLabel">名前:</sys:String>
+    <sys:String x:Key="DomainLabel">ドメイン:</sys:String>
+    <sys:String x:Key="DomainPlaceholder">例: example.com</sys:String>
+    <sys:String x:Key="Regex">正規</sys:String>
+    <sys:String x:Key="UrlPlaceholder">完全な URL に一致</sys:String>
+    <sys:String x:Key="MethodLabel">メソッド:</sys:String>
+    <sys:String x:Key="MethodPlaceholder">例: GET / POST、空欄で無制限</sys:String>
+    <sys:String x:Key="InterceptPhase">インターセプト段階:</sys:String>
+    <sys:String x:Key="InterceptRequestPhase">上りインターセプト（リクエスト）</sys:String>
+    <sys:String x:Key="InterceptResponsePhase">下りインターセプト（レスポンス）</sys:String>
+    <sys:String x:Key="RequestHeaderRules">リクエストヘッダールール</sys:String>
+    <sys:String x:Key="AddRequestHeader">リクエストヘッダーを追加</sys:String>
+    <sys:String x:Key="HeaderNamePlaceholder">ヘッダー名</sys:String>
+    <sys:String x:Key="HeaderValuePlaceholder">ヘッダー値</sys:String>
     <sys:String x:Key="Delete">削除</sys:String>
-    <sys:String x:Key="Modify">編集</sys:String>
-    <sys:String x:Key="Generate">生成</sys:String>
-    <sys:String x:Key="GeneratePassword">パスワードを生成</sys:String>
-    <sys:String x:Key="UserNameInputPrompt">ユーザー名/メール/...</sys:String>
-    <sys:String x:Key="Save">保存</sys:String>
+    <sys:String x:Key="DeleteRule">ルールを削除</sys:String>
+
+    <!-- 画像機能 -->
+    <sys:String x:Key="ImageDecodeFailed">画像の解析に失敗しました。破損しているか対応していない形式の可能性があります</sys:String>
+    <sys:String x:Key="ImageReplaceFailed">レスポンス画像の置換に失敗しました：</sys:String>
+    <sys:String x:Key="AllSupportedImageFormats">サポートされているすべての形式</sys:String>
 
 </ResourceDictionary>
