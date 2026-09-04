@@ -12,7 +12,7 @@
 
     <ItemGroup>
       <PackageReference Include="AvalonEdit" Version="6.3.1.120" />
-      <PackageReference Include="Titanium.Web.Proxy" Version="6.0.2" />
+      <PackageReference Include="Titanium.Web.Proxy" Version="7.0.4" />
       <PackageReference Include="WPF-UI" Version="4.3.0" />
     </ItemGroup>
 
