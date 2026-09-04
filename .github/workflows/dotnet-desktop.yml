@@ -65,17 +65,17 @@ jobs:
 
       # 框架依赖版：不含 .NET 10 运行时，体积小，但用户需自行安装 .NET 10 Desktop Runtime
       - name: Publish framework-dependent
-        run: dotnet publish net8.0_ProxyWPF/net8.0_ProxyWPF.csproj -c ${{ matrix.configuration }} -f net10.0-windows --self-contained false -o publish/framework-dependent
+        run: dotnet publish HttpProxyWpfClient/HttpProxyWpfClient.csproj -c ${{ matrix.configuration }} -f net10.0-windows --self-contained false -o publish/framework-dependent
 
       # 自包含版：把 win-x64 的 .NET 10 Desktop Runtime 一并打包，解压即用
       - name: Publish self-contained win-x64
-        run: dotnet publish net8.0_ProxyWPF/net8.0_ProxyWPF.csproj -c ${{ matrix.configuration }} -f net10.0-windows -r win-x64 --self-contained true -o publish/self-contained-win-x64
+        run: dotnet publish HttpProxyWpfClient/HttpProxyWpfClient.csproj -c ${{ matrix.configuration }} -f net10.0-windows -r win-x64 --self-contained true -o publish/self-contained-win-x64
 
       - name: Create ZIP packages
         shell: pwsh
         run: |
-          $frameworkDependent = "ProxyWPF-net10.0-${{ matrix.configuration }}-FrameworkDependent.zip"
-          $selfContained = "ProxyWPF-net10.0-${{ matrix.configuration }}-SelfContained-win-x64.zip"
+          $frameworkDependent = "HttpProxyWpfClient-net10.0-${{ matrix.configuration }}-FrameworkDependent.zip"
+          $selfContained = "HttpProxyWpfClient-net10.0-${{ matrix.configuration }}-SelfContained-win-x64.zip"
           Compress-Archive -Path "publish/framework-dependent/*" -DestinationPath $frameworkDependent -Force
           Compress-Archive -Path "publish/self-contained-win-x64/*" -DestinationPath $selfContained -Force
 
@@ -83,15 +83,15 @@ jobs:
       - name: Upload framework-dependent artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ProxyWPF-net10.0-${{ matrix.configuration }}-FrameworkDependent
-          path: ProxyWPF-net10.0-${{ matrix.configuration }}-FrameworkDependent.zip
+          name: HttpProxyWpfClient-net10.0-${{ matrix.configuration }}-FrameworkDependent
+          path: HttpProxyWpfClient-net10.0-${{ matrix.configuration }}-FrameworkDependent.zip
           if-no-files-found: error
 
       - name: Upload self-contained artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ProxyWPF-net10.0-${{ matrix.configuration }}-SelfContained-win-x64
-          path: ProxyWPF-net10.0-${{ matrix.configuration }}-SelfContained-win-x64.zip
+          name: HttpProxyWpfClient-net10.0-${{ matrix.configuration }}-SelfContained-win-x64
+          path: HttpProxyWpfClient-net10.0-${{ matrix.configuration }}-SelfContained-win-x64.zip
           if-no-files-found: error
 
       # 推送 v* 标签时自动创建 GitHub Release，同时附上两个 zip
@@ -100,8 +100,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            ProxyWPF-net10.0-${{ matrix.configuration }}-FrameworkDependent.zip
-            ProxyWPF-net10.0-${{ matrix.configuration }}-SelfContained-win-x64.zip
+            HttpProxyWpfClient-net10.0-${{ matrix.configuration }}-FrameworkDependent.zip
+            HttpProxyWpfClient-net10.0-${{ matrix.configuration }}-SelfContained-win-x64.zip
           body_path: CHANGELOG.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

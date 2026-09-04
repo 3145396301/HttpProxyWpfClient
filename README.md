@@ -1,4 +1,4 @@
-# net8.0_ProxyWPF
+# HttpProxyWpfClient
 
 一个基于 [Titanium.Web.Proxy](https://github.com/titanium007/Titanium.Web.Proxy) 的 Windows 桌面 HTTP/HTTPS 抓包与调试代理工具，界面采用 WPF-UI 的 Fluent 深色主题。
 
@@ -43,16 +43,16 @@
 - **运行程序**（选择其一）：
   - 推荐下载 **自包含版**（文件名含 `SelfContained`）：已内置 .NET 10 运行时，无需额外安装，解压即可运行；
   - 或下载 **框架依赖版**：需要先安装 [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0)。
-- **从源码构建**：需要 [.NET 10 SDK](https://dotnet.microsoft.com/download)（项目在 `global.json` 中声明 `10.0.0`，`rollForward: latestFeature`）
+- **从源码构建**：需要 [.NET 10 SDK](https://dotnet.microsoft.com/download)（项目在 `global.json` 中声明 `10.0.400`，`rollForward: latestFeature`）
 
 ### 构建与运行
 
 ```bash
-dotnet build net8.0_ProxyWPF.sln
-dotnet run --project net8.0_ProxyWPF
+dotnet build HttpProxyWpfClient.sln
+dotnet run --project HttpProxyWpfClient
 ```
 
-或使用 Visual Studio / Rider 打开 `net8.0_ProxyWPF.sln` 直接运行。
+或使用 Visual Studio / Rider 打开 `HttpProxyWpfClient.sln` 直接运行。
 
 ### 使用步骤
 
@@ -98,7 +98,7 @@ dotnet run --project net8.0_ProxyWPF
 ## 项目结构
 
 ```
-net8.0_ProxyWPF/
+HttpProxyWpfClient/
 ├── App.xaml(.cs)              # 应用入口（加载深色主题、多语言资源）
 ├── MainWindow.xaml(.cs)       # 主窗口（标题栏、导航、页面框架）
 ├── code/
@@ -134,8 +134,8 @@ net8.0_ProxyWPF/
 
 - 推送 `main` 分支或 PR 时自动构建 `Release`；
 - 每次构建同时产出两种 zip，并分别上传为独立 Artifact：
-  - `ProxyWPF-net10.0-Release-FrameworkDependent.zip`：框架依赖版，不含运行时，体积约为数 MB，用户需自行安装 .NET 10 Desktop Runtime；
-  - `ProxyWPF-net10.0-Release-SelfContained-win-x64.zip`：自包含版，内置 win-x64 的 .NET 10 Desktop Runtime，体积明显更大，解压即用；
+  - `HttpProxyWpfClient-net10.0-Release-FrameworkDependent.zip`：框架依赖版，不含运行时，体积约为数 MB，用户需自行安装 .NET 10 Desktop Runtime；
+  - `HttpProxyWpfClient-net10.0-Release-SelfContained-win-x64.zip`：自包含版，内置 win-x64 的 .NET 10 Desktop Runtime，体积明显更大，解压即用；
 - 推送 `v*` 标签时自动创建 GitHub Release，同时附上两种 zip，说明取自 `CHANGELOG.md`。
 
 ## 更新日志
