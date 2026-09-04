@@ -18,6 +18,7 @@ using HttpProxyWpfClient.code.net.entity;
 using HttpProxyWpfClient.code.net.util;
 using HttpProxyWpfClient.code.Pages.BlockingSetting;
 using HttpProxyWpfClient.code.Pages.Util;
+using HttpProxyWpfClient.code.Services;
 using Titanium.Web.Proxy.EventArguments;
 using Titanium.Web.Proxy.Http;
 
@@ -174,24 +175,8 @@ namespace HttpProxyWpfClient.code.Pages
         private void RunSearch()
         {
             SearchResults.Clear();
-            if (string.IsNullOrEmpty(SearchKeyword)) return;
-
-            SearchOptions options = BuildSearchOptions();
-            if (options.Fields.Count == 0) return;
-
-            foreach (RequestVo requestVo in Sessions)
-            {
-                foreach (SearchField field in options.Fields)
-                {
-                    string text = requestVo.GetSearchableText(field);
-                    foreach (var (start, length) in SearchEngine.FindMatches(text, options))
-                    {
-                        string matchedText = text.Substring(start, length);
-                        string snippet = SearchEngine.BuildSnippet(text, start, length);
-                        SearchResults.Add(new SearchResultItem(requestVo, field, matchedText, start, snippet));
-                    }
-                }
-            }
+            foreach (SearchResultItem result in SessionSearchService.Search(Sessions, BuildSearchOptions()))
+                SearchResults.Add(result);
         }
 
         /// <summary>
@@ -419,7 +404,10 @@ namespace HttpProxyWpfClient.code.Pages
             get => _selectedSession;
             set
             {
-                SetField(ref _selectedSession, value);
+                if (!SetField(ref _selectedSession, value))
+                {
+                    return;
+                }
                 if (value==null)
                 {
                     this.RequestMessage = null;
@@ -436,7 +424,7 @@ namespace HttpProxyWpfClient.code.Pages
         /// </summary>
         private void RefreshMessagesIfSelected(SessionEventArgs session)
         {
-            this.Dispatcher.Invoke(() =>
+            this.Dispatcher.BeginInvoke(() =>
             {
                 if (SelectedSession != null && SelectedSession.Session == session)
                 {
@@ -451,7 +439,7 @@ namespace HttpProxyWpfClient.code.Pages
         /// </summary>
         private void UpdateResponseInfo(SessionEventArgs session)
         {
-            this.Dispatcher.Invoke(() =>
+            this.Dispatcher.BeginInvoke(() =>
             {
                 RequestVo requestVo = this.Sessions.FirstOrDefault(x => x.Session == session);
                 if (requestVo == null)
@@ -546,6 +534,9 @@ namespace HttpProxyWpfClient.code.Pages
                 UpstreamPass = config.UpstreamPass,
                 UpstreamEnabled = config.UpstreamEnabled
             };
+
+            ConfigureProxyPipeline();
+#if LEGACY_PROXY_PIPELINE
 
             proxyConnect.AddBeforeRequestTask("URL 打印", 1, session =>
             {
@@ -654,6 +645,7 @@ namespace HttpProxyWpfClient.code.Pages
                 return true;
             });
 
+ #endif
             proxyConnect.CreateProxyServer();
             proxyConnect.StartProxy();
             proxyConnect.SettingSystemProxy();
@@ -744,6 +736,7 @@ namespace HttpProxyWpfClient.code.Pages
         /// <summary>
         /// 将当前本地/上游代理设置与拦截规则保存到本地配置文件
         /// </summary>
+ #if LEGACY_CONFIGURATION
         public void SaveConfig()
         {
             var config = new AppConfig
@@ -891,6 +884,7 @@ namespace HttpProxyWpfClient.code.Pages
             SaveConfig();
         }
 
+ #endif
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
@@ -925,13 +919,7 @@ namespace HttpProxyWpfClient.code.Pages
 
         private void discharged_OnClick(object sender, RoutedEventArgs e)
         {
-            foreach (RequestVo requestVo in Sessions)
-            {
-                lock (requestVo.Session)
-                {
-                    Monitor.PulseAll(requestVo.Session);
-                }
-            }
+            ReleaseBlockedSessions();
         }
 
         /// <summary>
@@ -1002,7 +990,7 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
         /// <summary>
         /// 弹出会话列表列显隐菜单（勾选/取消即展示/隐藏对应列），变更后保存配置
         /// </summary>
-        private void ShowColumnVisibilityMenu()
+        private void ShowColumnVisibilityMenuLegacy()
         {
             var menu = new ContextMenu();
             foreach (var col in _sessionColumns)
@@ -1035,7 +1023,7 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
             menu.IsOpen = true;
         }
 
-        private static T? FindVisualParent<T>(DependencyObject? child) where T : DependencyObject
+        private static T? FindVisualParentLegacy<T>(DependencyObject? child) where T : DependencyObject
         {
             while (child != null)
             {
@@ -1045,22 +1033,22 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
             return null;
         }
 
-        private void CopyCurlCmd_OnClick(object sender, RoutedEventArgs e)
+        private void CopyCurlCmd_OnClickLegacy(object sender, RoutedEventArgs e)
         {
             CopyCurl(CurlShellType.Cmd);
         }
 
-        private void CopyCurlBash_OnClick(object sender, RoutedEventArgs e)
+        private void CopyCurlBash_OnClickLegacy(object sender, RoutedEventArgs e)
         {
             CopyCurl(CurlShellType.Bash);
         }
 
-        private void CopyCurlPowerShell_OnClick(object sender, RoutedEventArgs e)
+        private void CopyCurlPowerShell_OnClickLegacy(object sender, RoutedEventArgs e)
         {
             CopyCurl(CurlShellType.PowerShell);
         }
 
-        private void CopyCurl(CurlShellType shellType)
+        private void CopyCurlLegacy(CurlShellType shellType)
         {
             if (SelectedSession == null)
             {
@@ -1071,7 +1059,7 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
             Clipboard.SetText(curlCommand);
         }
 
-        private void ErrorText_OnClick(object sender, MouseButtonEventArgs e)
+        private void ErrorText_OnClickLegacy(object sender, MouseButtonEventArgs e)
         {
             string errorText = ResponseMessage?.ErrorText;
             if (string.IsNullOrEmpty(errorText))
@@ -1123,7 +1111,30 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
             }
         }
 
+        private void ParseHttpRequestText(string requestText, Request request)
+        {
+            ParsedHttpMessage parsed = HttpMessageParser.Parse(requestText);
+            HttpMessageParser.ApplyRequest(parsed, request);
+            if (!string.IsNullOrEmpty(parsed.BodyText) || request.HasBody)
+            {
+                SelectedSession?.Session.SetRequestBodyString(parsed.BodyText);
+            }
+        }
+
         private void ParseHttpResponseText(string responseText, Response response)
+        {
+            ParsedHttpMessage parsed = HttpMessageParser.Parse(responseText);
+            HttpMessageParser.ApplyResponse(parsed, response);
+            if (SelectedSession == null) return;
+
+            byte[] bodyBytes = HttpMessageParser.GetBodyBytes(parsed, response);
+            if (bodyBytes.Length > 0)
+            {
+                SelectedSession.Session.SetResponseBody(bodyBytes);
+            }
+        }
+
+        private void ParseHttpResponseTextLegacy(string responseText, Response response)
         {
             if (responseText == null) responseText = string.Empty;
 
@@ -1309,7 +1320,7 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
             try
             {
                 // 尝试读取 Transfer-Encoding 或 Content-Length
-                var te = GetHeaderValue(response.Headers, "Transfer-Encoding");
+                var te = GetHeaderValueLegacy(response.Headers, "Transfer-Encoding");
                 if (!string.IsNullOrEmpty(te) && te.IndexOf("chunked", StringComparison.OrdinalIgnoreCase) >= 0)
                     isChunked = true;
             }
@@ -1324,7 +1335,7 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
                 // 简单实现：若 bodyText 是 chunked 文本，则解码；如果你确实需要处理 chunked 二进制，请替换为更健壮的实现
                 try
                 {
-                    bodyBytes = DecodeChunkedBody(bodyText);
+                    bodyBytes = DecodeChunkedBodyLegacy(bodyText);
                 }
                 catch
                 {
@@ -1373,7 +1384,7 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
         /// <summary>
         /// 将编辑框中的原始请求文本解析回 Request 对象（首行 METHOD URL HTTP/x.x，随后 headers，空行后为 body）
         /// </summary>
-        private void ParseHttpRequestText(string requestText, Request request)
+        private void ParseHttpRequestTextLegacy(string requestText, Request request)
         {
             if (requestText == null) requestText = string.Empty;
 
@@ -1505,7 +1516,7 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
             }
         }
         // 小助手：从 headers 集合读取 header 值（尝试多种可能的接口）
-        private string GetHeaderValue(object headersObj, string headerName)
+        private string GetHeaderValueLegacy(object headersObj, string headerName)
         {
             if (headersObj == null) return null;
             try
@@ -1536,7 +1547,7 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
         }
 
         // 简单的 chunked 解码（输入为 chunked 文本形式），返回解码后的字节（只作示范）
-        private byte[] DecodeChunkedBody(string chunked)
+        private byte[] DecodeChunkedBodyLegacy(string chunked)
         {
             if (string.IsNullOrEmpty(chunked)) return Array.Empty<byte>();
             using (var ms = new MemoryStream())
@@ -1589,8 +1600,8 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
             string? result = ShowBodyEditDialog("输入请求体", "");
             if (result != null)
             {
-                ResponseMessage.RespBody = result;
-                SyncResponseEditorText();
+                RequestMessage!.ReqBody = result;
+                SyncRequestEditorText();
             }
         }
 
@@ -1898,6 +1909,7 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
             return panel;
         }
 
+        #if LEGACY_LIFECYCLE
         public void ResetProxy(string proxyHost = null, int? proxyPort = null, string? upstreamIp = null,
         int? upstreamPort = null, string upstreamUser = null, string upstreamPass = null, bool upstreamEnabled = true)
         {
@@ -1912,13 +1924,7 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
             SaveConfig();
 
             // 释放所有还卡在 Monitor.Wait 的会话，避免 ResetProxy 内部 Stop() 时死锁
-            foreach (RequestVo requestVo in Sessions)
-            {
-                lock (requestVo.Session)
-                {
-                    Monitor.PulseAll(requestVo.Session);
-                }
-            }
+            ReleaseBlockedSessions();
 
             // ResetProxy/StartProxy 内部会阻塞等待旧连接关闭，放到后台线程执行，避免卡死 UI
             System.Threading.Tasks.Task.Run(() =>
@@ -1940,7 +1946,10 @@ private void SessionList_OnPreviewMouseRightButtonDown(object sender, MouseButto
                 Groups.Add(group);
             }
         }
-private void UIElement_OnKeyDown(object sender, KeyEventArgs e)
+        #endif
+
+        #if LEGACY_DELETE_HANDLER
+        private void UIElement_OnKeyDown(object sender, KeyEventArgs e)
         {
             ListView? listView = sender as ListView;
             IList listViewSelectedItems = listView.SelectedItems;
@@ -1956,27 +1965,19 @@ private void UIElement_OnKeyDown(object sender, KeyEventArgs e)
                     Console.WriteLine($"数量：{selectedItems.Count}");
                     foreach (var item in selectedItems)
                     {
-                        this.Dispatcher.Invoke(() =>
-                        {
-                            Sessions.Remove(item);
-                            item.Session.Dispose();
-                        });
+                        this.Dispatcher.Invoke(() => RemoveSessions(new[] { item }));
                         Console.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")},删除了");
                     }
                 }
             })).Start();
         }
 
+        #endif
+        #if LEGACY_LIFECYCLE
         public void StopProxy()
         {
             // 释放所有还卡在 Monitor.Wait 的会话，避免 Stop() 时死锁
-            foreach (RequestVo requestVo in Sessions)
-            {
-                lock (requestVo.Session)
-                {
-                    Monitor.PulseAll(requestVo.Session);
-                }
-            }
+            ReleaseBlockedSessions();
 
             // Stop() 本身是阻塞调用，放到后台线程执行，避免卡死 UI
             System.Threading.Tasks.Task.Run(() =>
@@ -1991,16 +1992,11 @@ private void UIElement_OnKeyDown(object sender, KeyEventArgs e)
         /// </summary>
         public void ShutdownProxy()
         {
-            foreach (RequestVo requestVo in Sessions)
-            {
-                lock (requestVo.Session)
-                {
-                    Monitor.PulseAll(requestVo.Session);
-                }
-            }
+            ReleaseBlockedSessions();
 
             proxyConnect.StopSystemProxy();
             proxyConnect.StopProxy();
         }
+        #endif
     }
 }
